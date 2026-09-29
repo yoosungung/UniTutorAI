@@ -16,6 +16,7 @@ This file provides guidance to AI coding assistants (Claude Code, Codex, Gemini,
 | `README.md` | 저장소 방문자용 소개 + 로컬 quickstart | 루트 |
 | `ROADMAP.md` | 수행 계획(마일스톤·순서·미결정 항목) | 루트 |
 | `<comp>/DESIGN.md` | 컴포넌트 *내부* 설계 + `## Commands` (빌드/실행/테스트) | `backend/`, `frontend/`, `???/` |
+| `frontend/THEME.md` | 프론트엔드 UI/UX 디자인 시스템 및 테마 가이드 | `frontend/` |
  
 규칙:
  
@@ -36,5 +37,5 @@ This file provides guidance to AI coding assistants (Claude Code, Codex, Gemini,
  
 ## 3. Status
  
-제품 경험 문서를 작성하는 단계다. 방향·화면·세션 루프의 정본은 [docs/PRODUCT.md](docs/PRODUCT.md)에 있다. 구현 코드는 아직 없다.
+backend(Cloudflare Workers)와 frontend(React, Cloudflare Pages)의 기본 디렉터리 구조, 내부 설계 문서([backend/DESIGN.md](backend/DESIGN.md), [frontend/DESIGN.md](frontend/DESIGN.md)) 및 기본 스켈레톤이 구성되었다. 1단계 루프(강의 보며 질문받기) 구현을 위한 TDD 진입 준비 상태다.
 
