@@ -1,0 +1,154 @@
+[
+  {
+    "id": "cs50p-2022-lecture-0:span-001",
+    "courseId": "cs50p-2022-lecture-0",
+    "concept": "Creating Code with Python",
+    "startSec": 24,
+    "endSec": 341,
+    "slideLabel": "Creating Code with Python"
+  },
+  {
+    "id": "cs50p-2022-lecture-0:span-002",
+    "courseId": "cs50p-2022-lecture-0",
+    "concept": "Functions",
+    "startSec": 341,
+    "endSec": 468,
+    "slideLabel": "Functions"
+  },
+  {
+    "id": "cs50p-2022-lecture-0:span-003",
+    "courseId": "cs50p-2022-lecture-0",
+    "concept": "Bugs",
+    "startSec": 468,
+    "endSec": 766,
+    "slideLabel": "Bugs"
+  },
+  {
+    "id": "cs50p-2022-lecture-0:span-004",
+    "courseId": "cs50p-2022-lecture-0",
+    "concept": "Improving Your First Python Program",
+    "startSec": 766,
+    "endSec": 948,
+    "slideLabel": "Improving Your First Python Program"
+  },
+  {
+    "id": "cs50p-2022-lecture-0:span-005",
+    "courseId": "cs50p-2022-lecture-0",
+    "concept": "Variables",
+    "startSec": 948,
+    "endSec": 1214,
+    "slideLabel": "Variables"
+  },
+  {
+    "id": "cs50p-2022-lecture-0:span-006",
+    "courseId": "cs50p-2022-lecture-0",
+    "concept": "Comments",
+    "startSec": 1214,
+    "endSec": 1350,
+    "slideLabel": "Comments"
+  },
+  {
+    "id": "cs50p-2022-lecture-0:span-007",
+    "courseId": "cs50p-2022-lecture-0",
+    "concept": "Pseudocode",
+    "startSec": 1350,
+    "endSec": 1741,
+    "slideLabel": "Pseudocode"
+  },
+  {
+    "id": "cs50p-2022-lecture-0:span-008",
+    "courseId": "cs50p-2022-lecture-0",
+    "concept": "Further Improving Your First Python Program",
+    "startSec": 1741,
+    "endSec": 2075,
+    "slideLabel": "Further Improving Your First Python Program"
+  },
+  {
+    "id": "cs50p-2022-lecture-0:span-009",
+    "courseId": "cs50p-2022-lecture-0",
+    "concept": "Strings and Parameters",
+    "startSec": 2075,
+    "endSec": 2491,
+    "slideLabel": "Strings and Parameters"
+  },
+  {
+    "id": "cs50p-2022-lecture-0:span-010",
+    "courseId": "cs50p-2022-lecture-0",
+    "concept": "A small problem with quotation marks",
+    "startSec": 2491,
+    "endSec": 2655,
+    "slideLabel": "A small problem with quotation marks"
+  },
+  {
+    "id": "cs50p-2022-lecture-0:span-011",
+    "courseId": "cs50p-2022-lecture-0",
+    "concept": "Formatting Strings",
+    "startSec": 2655,
+    "endSec": 2840,
+    "slideLabel": "Formatting Strings"
+  },
+  {
+    "id": "cs50p-2022-lecture-0:span-012",
+    "courseId": "cs50p-2022-lecture-0",
+    "concept": "More on Strings",
+    "startSec": 2840,
+    "endSec": 3578,
+    "slideLabel": "More on Strings"
+  },
+  {
+    "id": "cs50p-2022-lecture-0:span-013",
+    "courseId": "cs50p-2022-lecture-0",
+    "concept": "Integers or int",
+    "startSec": 3578,
+    "endSec": 4366,
+    "slideLabel": "Integers or int"
+  },
+  {
+    "id": "cs50p-2022-lecture-0:span-014",
+    "courseId": "cs50p-2022-lecture-0",
+    "concept": "Readability Wins",
+    "startSec": 4366,
+    "endSec": 4478,
+    "slideLabel": "Readability Wins"
+  },
+  {
+    "id": "cs50p-2022-lecture-0:span-015",
+    "courseId": "cs50p-2022-lecture-0",
+    "concept": "Float Basics",
+    "startSec": 4478,
+    "endSec": 5037,
+    "slideLabel": "Float Basics"
+  },
+  {
+    "id": "cs50p-2022-lecture-0:span-016",
+    "courseId": "cs50p-2022-lecture-0",
+    "concept": "More on Floats",
+    "startSec": 5037,
+    "endSec": 5313,
+    "slideLabel": "More on Floats"
+  },
+  {
+    "id": "cs50p-2022-lecture-0:span-017",
+    "courseId": "cs50p-2022-lecture-0",
+    "concept": "Def",
+    "startSec": 5313,
+    "endSec": 6097,
+    "slideLabel": "Def"
+  },
+  {
+    "id": "cs50p-2022-lecture-0:span-018",
+    "courseId": "cs50p-2022-lecture-0",
+    "concept": "Returning Values",
+    "startSec": 6097,
+    "endSec": 6315,
+    "slideLabel": "Returning Values"
+  },
+  {
+    "id": "cs50p-2022-lecture-0:span-019",
+    "courseId": "cs50p-2022-lecture-0",
+    "concept": "Summing Up",
+    "startSec": 6315,
+    "endSec": 6336.59,
+    "slideLabel": "Summing Up"
+  }
+]
