@@ -3,14 +3,17 @@ import { embedUrlFromPlaybackUrl } from '../../lib/youtube';
 
 type Props = {
   course: CourseRef;
+  /** Seconds to seek on CitationSelected (embed `start=`). */
+  seekSec?: number;
 };
 
 /**
  * YouTube iframe only — no local media files (PRODUCT §4.3 / DESIGN §2.2).
  * Isolated DOM so tutor UI never overlays the player (ARCHITECTURE §1).
+ * CitationSelected remounts embed with start=SourceSpan.startSec.
  */
-export function YouTubePlayer({ course }: Props) {
-  const src = embedUrlFromPlaybackUrl(course.playbackUrl);
+export function YouTubePlayer({ course, seekSec }: Props) {
+  const src = embedUrlFromPlaybackUrl(course.playbackUrl, seekSec);
 
   if (!src) {
     return (
@@ -43,6 +46,7 @@ export function YouTubePlayer({ course }: Props) {
       }}
     >
       <iframe
+        key={seekSec ?? 'live'}
         title={course.title}
         src={src}
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"

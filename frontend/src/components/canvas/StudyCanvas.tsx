@@ -12,13 +12,15 @@ import { YouTubePlayer } from '../player/YouTubePlayer';
 type Props = {
   course: CourseRef;
   tutor: ReactNode;
+  /** CitationSelected → SourceSpan.startSec for player seek. */
+  seekSec?: number;
 };
 
 /**
  * Adaptive two-pane study canvas (PRODUCT §4.3).
  * Media and tutor are sibling panes — tutor never overlays the player.
  */
-export function StudyCanvas({ course, tutor }: Props) {
+export function StudyCanvas({ course, tutor, seekSec }: Props) {
   const layout = useLayoutMode();
   const [ratio, setRatio] = useState<SplitRatio>('5:5');
   const rootRef = useRef<HTMLDivElement>(null);
@@ -77,7 +79,7 @@ export function StudyCanvas({ course, tutor }: Props) {
           overflow: 'hidden',
         }}
       >
-        <YouTubePlayer course={course} />
+        <YouTubePlayer course={course} seekSec={seekSec} />
       </section>
 
       <div

@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 
-/** Tutor pane shell — no TutorTurn generation in this ticket. */
+/** Tutor pane chrome around a TutorTurn (or placeholder). */
 export function TutorPane({
   layoutLabel,
   children,
@@ -36,20 +36,7 @@ export function TutorPane({
         </span>
       </header>
 
-      <div style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
-        {children ?? (
-          <p
-            style={{
-              color: 'var(--text-secondary, #94A3B8)',
-              fontSize: 14,
-              lineHeight: 1.5,
-            }}
-          >
-            튜터가 강의 장면(SourceSpan)을 기반으로 한 번에 하나의 유도 질문을
-            던집니다. (다음 티켓)
-          </p>
-        )}
-      </div>
+      <div style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>{children}</div>
 
       <footer
         style={{
