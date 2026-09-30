@@ -23,8 +23,15 @@ export function videoIdFromPlaybackUrl(playbackUrl: string): string | null {
   }
 }
 
-export function embedUrlFromPlaybackUrl(playbackUrl: string): string | null {
+export function embedUrlFromPlaybackUrl(
+  playbackUrl: string,
+  startSec?: number,
+): string | null {
   const id = videoIdFromPlaybackUrl(playbackUrl);
   if (!id) return null;
-  return `https://www.youtube-nocookie.com/embed/${id}`;
+  const base = `https://www.youtube-nocookie.com/embed/${id}`;
+  if (startSec == null || !Number.isFinite(startSec) || startSec <= 0) {
+    return base;
+  }
+  return `${base}?start=${Math.floor(startSec)}`;
 }

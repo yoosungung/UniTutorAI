@@ -20,6 +20,15 @@ describe('youtube helpers', () => {
     ).toBe('https://www.youtube-nocookie.com/embed/fNk_zzaMoSs');
   });
 
+  it('appends start= for CitationSelected seek', () => {
+    expect(
+      embedUrlFromPlaybackUrl(
+        'https://www.youtube.com/watch?v=fNk_zzaMoSs',
+        341,
+      ),
+    ).toBe('https://www.youtube-nocookie.com/embed/fNk_zzaMoSs?start=341');
+  });
+
   it('returns null for non-YouTube URLs', () => {
     expect(videoIdFromPlaybackUrl('https://example.com/video.mp4')).toBeNull();
     expect(embedUrlFromPlaybackUrl('https://example.com/video.mp4')).toBeNull();

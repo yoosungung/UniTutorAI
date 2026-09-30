@@ -37,5 +37,5 @@ This file provides guidance to AI coding assistants (Claude Code, Codex, Gemini,
  
 ## 3. Status
  
-backend · frontend 스켈레톤과 적응형 2분할 캔버스(YouTube iframe)가 있다. `content/` 배치로 CS50P Lecture 0의 정적 `SourceSpan` 픽스처를 제공한다. 1단계 남은 축: 1질문 튜터·시각 점프.
+backend · frontend 스켈레톤, 적응형 2분할 캔버스(YouTube iframe), CS50P L0 정적 `SourceSpan` 픽스처, mock `TutorTurn` + `CitationSelected`→`startSec` seek가 있다. 1단계 다음: 추론 라우팅(백엔드)·에스컬레이션 고도화.
 
