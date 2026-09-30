@@ -1,6 +1,6 @@
 import { StudyCanvas } from './components/canvas/StudyCanvas';
 import { TutorPane } from './components/tutor/TutorPane';
-import { PLACEHOLDER_COURSE } from './data/placeholderCourse';
+import { CS50P_LECTURE_0 } from './data/cs50pLecture0';
 import { useLayoutMode } from './hooks/useLayoutMode';
 
 export default function App() {
@@ -13,7 +13,7 @@ export default function App() {
   return (
     <div style={{ width: '100vw', height: '100vh' }}>
       <StudyCanvas
-        course={PLACEHOLDER_COURSE}
+        course={CS50P_LECTURE_0}
         tutor={<TutorPane layoutLabel={layoutLabel} />}
       />
     </div>

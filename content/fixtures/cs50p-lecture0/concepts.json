@@ -1,0 +1,97 @@
+[
+  {
+    "concept": "Creating Code with Python",
+    "startSec": 24,
+    "slideLabel": "Creating Code with Python"
+  },
+  {
+    "concept": "Functions",
+    "startSec": 341,
+    "slideLabel": "Functions"
+  },
+  {
+    "concept": "Bugs",
+    "startSec": 468,
+    "slideLabel": "Bugs"
+  },
+  {
+    "concept": "Improving Your First Python Program",
+    "startSec": 766,
+    "slideLabel": "Improving Your First Python Program"
+  },
+  {
+    "concept": "Variables",
+    "startSec": 948,
+    "slideLabel": "Variables"
+  },
+  {
+    "concept": "Comments",
+    "startSec": 1214,
+    "slideLabel": "Comments"
+  },
+  {
+    "concept": "Pseudocode",
+    "startSec": 1350,
+    "slideLabel": "Pseudocode"
+  },
+  {
+    "concept": "Further Improving Your First Python Program",
+    "startSec": 1741,
+    "slideLabel": "Further Improving Your First Python Program"
+  },
+  {
+    "concept": "Strings and Parameters",
+    "startSec": 2075,
+    "slideLabel": "Strings and Parameters"
+  },
+  {
+    "concept": "A small problem with quotation marks",
+    "startSec": 2491,
+    "slideLabel": "A small problem with quotation marks"
+  },
+  {
+    "concept": "Formatting Strings",
+    "startSec": 2655,
+    "slideLabel": "Formatting Strings"
+  },
+  {
+    "concept": "More on Strings",
+    "startSec": 2840,
+    "slideLabel": "More on Strings"
+  },
+  {
+    "concept": "Integers or int",
+    "startSec": 3578,
+    "slideLabel": "Integers or int"
+  },
+  {
+    "concept": "Readability Wins",
+    "startSec": 4366,
+    "slideLabel": "Readability Wins"
+  },
+  {
+    "concept": "Float Basics",
+    "startSec": 4478,
+    "slideLabel": "Float Basics"
+  },
+  {
+    "concept": "More on Floats",
+    "startSec": 5037,
+    "slideLabel": "More on Floats"
+  },
+  {
+    "concept": "Def",
+    "startSec": 5313,
+    "slideLabel": "Def"
+  },
+  {
+    "concept": "Returning Values",
+    "startSec": 6097,
+    "slideLabel": "Returning Values"
+  },
+  {
+    "concept": "Summing Up",
+    "startSec": 6315,
+    "slideLabel": "Summing Up"
+  }
+]

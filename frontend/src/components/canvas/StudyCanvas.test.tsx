@@ -4,10 +4,10 @@ import { StudyCanvas } from './StudyCanvas';
 import type { CourseRef } from '../../types/course';
 
 const course: CourseRef = {
-  id: 'placeholder-3b1b-essence',
-  title: 'Essence of Linear Algebra (placeholder)',
-  subject: 'Mathematics',
-  playbackUrl: 'https://www.youtube.com/watch?v=fNk_zzaMoSs',
+  id: 'cs50p-2022-lecture-0',
+  title: 'CS50P Lecture 0 — Functions, Variables',
+  subject: 'Computer Science',
+  playbackUrl: 'https://www.youtube.com/watch?v=JP7ITIXGpHk',
 };
 
 function setViewport(width: number, height: number) {
@@ -33,9 +33,9 @@ describe('StudyCanvas', () => {
       />,
     );
 
-    const iframe = screen.getByTitle(/Essence of Linear Algebra/i) as HTMLIFrameElement;
+    const iframe = screen.getByTitle(/CS50P Lecture 0/i) as HTMLIFrameElement;
     expect(iframe.tagName).toBe('IFRAME');
-    expect(iframe.src).toContain('youtube-nocookie.com/embed/fNk_zzaMoSs');
+    expect(iframe.src).toContain('youtube-nocookie.com/embed/JP7ITIXGpHk');
   });
 
   it('stacks panes on narrow viewports and sides on wide', () => {
