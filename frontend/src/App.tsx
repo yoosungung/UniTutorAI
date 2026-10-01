@@ -16,6 +16,7 @@ import {
   pickPrerequisiteDetour,
 } from './lib/detour';
 import { buildPathFromOnboarding } from './lib/pathFromOnboarding';
+import { closeSession } from './lib/sessionClose';
 import {
   LEARNER_STATE_VERSION,
   loadLearnerState,
@@ -25,6 +26,7 @@ import {
 import { useLayoutMode } from './hooks/useLayoutMode';
 import type { CitationSelected } from './types/events';
 import type { PathItem } from './types/path';
+import type { ReviewCard } from './types/reviewCard';
 import type { TutorTurn } from './types/tutorTurn';
 
 function turnForSpan(spanId: string): TutorTurn {
@@ -47,6 +49,7 @@ function initialFromStorage() {
     path: saved?.path ?? null,
     returnQuestionSpanId: saved?.returnQuestionSpanId ?? null,
     wrongAnswers: saved?.wrongAnswers ?? [],
+    reviewCards: saved?.reviewCards ?? [],
   };
 }
 
@@ -64,6 +67,12 @@ export default function App() {
   const [wrongAnswers, setWrongAnswers] = useState<WrongAnswerRecord[]>(
     () => hydrated.wrongAnswers,
   );
+  const [reviewCards, setReviewCards] = useState<ReviewCard[]>(
+    () => hydrated.reviewCards,
+  );
+  const [lastClosedSummary, setLastClosedSummary] = useState<string | null>(
+    null,
+  );
 
   useEffect(() => {
     saveLearnerState({
@@ -73,8 +82,9 @@ export default function App() {
       knownSpanIds,
       returnQuestionSpanId,
       wrongAnswers,
+      reviewCards,
     });
-  }, [path, knownSpanIds, returnQuestionSpanId, wrongAnswers]);
+  }, [path, knownSpanIds, returnQuestionSpanId, wrongAnswers, reviewCards]);
 
   const layoutLabel =
     layout === 'stacked'
@@ -145,6 +155,30 @@ export default function App() {
     if (back) setSeekSec(back.startSec);
   }
 
+  function onCloseSession() {
+    if (!path || !active || active.placement !== 'current') return;
+    const span = CS50P_LECTURE_0_SPANS.find((s) => s.id === active.sourceSpanId);
+    const concept = span?.concept ?? active.sourceSpanId;
+    const closedAt = new Date().toISOString();
+    const { card, state } = closeSession({
+      state: {
+        version: LEARNER_STATE_VERSION,
+        courseId: CS50P_LECTURE_0.id,
+        path,
+        knownSpanIds,
+        returnQuestionSpanId,
+        wrongAnswers,
+        reviewCards,
+      },
+      sourceSpanId: active.sourceSpanId,
+      summary: `${concept} 장면 확인을 마쳤습니다.`,
+      closedAt,
+      cardId: `review-${active.sourceSpanId}-${closedAt}`,
+    });
+    setReviewCards(state.reviewCards);
+    setLastClosedSummary(card.summary);
+  }
+
   if (!path) {
     return (
       <div style={{ width: '100vw', height: '100vh', overflow: 'auto' }}>
@@ -187,7 +221,17 @@ export default function App() {
               우회 끝 — 원래 질문으로
             </button>
           )}
+          {active?.placement === 'current' && (
+            <button type="button" onClick={onCloseSession}>
+              세션 종료 — ReviewCard
+            </button>
+          )}
         </div>
+        {lastClosedSummary && (
+          <p aria-label="세션 종료 요약" style={{ fontSize: 13, opacity: 0.85 }}>
+            저장됨: {lastClosedSummary}
+          </p>
+        )}
       </div>
       <div style={{ flex: 1, minHeight: 0 }}>
         <StudyCanvas

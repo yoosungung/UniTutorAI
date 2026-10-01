@@ -13,3 +13,12 @@ export type DetourInserted = {
   detourSpanId: string;
   returnToSpanId: string;
 };
+
+/** Short check + feedback finished → one ReviewCard is created. */
+export type SessionClosed = {
+  type: 'SessionClosed';
+  sourceSpanId: string;
+  summary: string;
+  /** ISO-8601 moment the session closed. */
+  closedAt: string;
+};
