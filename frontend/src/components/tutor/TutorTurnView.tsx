@@ -28,12 +28,27 @@ export function TutorTurnView({ turn, spans, onCitationSelected }: Props) {
       data-tutor-turn={turn.id}
       data-scope={turn.scope}
       data-escalation={turn.escalationStep}
+      data-formula-verdict={turn.formulaVerdict}
       style={{
         display: 'flex',
         flexDirection: 'column',
         gap: 12,
       }}
     >
+      {turn.formulaVerdict && (
+        <p
+          role="status"
+          data-formula-verdict={turn.formulaVerdict}
+          style={{
+            margin: 0,
+            fontSize: 13,
+            lineHeight: '20px',
+            color: 'var(--text-secondary, #94A3B8)',
+          }}
+        >
+          {turn.formulaVerdict === 'correct' ? '맞아요' : '다시 볼까요'}
+        </p>
+      )}
       <h3
         style={{
           margin: 0,
