@@ -29,6 +29,7 @@ function sampleState(
     knownSpanIds: ['span-a'],
     returnQuestionSpanId: null,
     wrongAnswers: [],
+    reviewCards: [],
     ...overrides,
   };
 }

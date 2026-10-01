@@ -1,4 +1,5 @@
 import type { PathItem } from '../types/path';
+import type { ReviewCard } from '../types/reviewCard';
 
 /** Bump when LearnerState shape changes incompatibly. */
 export const LEARNER_STATE_VERSION = 1 as const;
@@ -9,7 +10,7 @@ export type WrongAnswerRecord = {
   recordedAt: string;
 };
 
-/** Local-first learner progress + wrong answers for one CourseRef.id. */
+/** Local-first learner progress + wrong answers + ReviewCards for one CourseRef.id. */
 export type LearnerState = {
   version: typeof LEARNER_STATE_VERSION;
   courseId: string;
@@ -17,6 +18,7 @@ export type LearnerState = {
   knownSpanIds: string[];
   returnQuestionSpanId: string | null;
   wrongAnswers: WrongAnswerRecord[];
+  reviewCards: ReviewCard[];
 };
 
 /** Storage key scoped by CourseRef.id (ticket risk). */
@@ -95,6 +97,21 @@ function parseLearnerState(
         return null;
       }
     }
+    const reviewCardsRaw = data.reviewCards ?? [];
+    if (!Array.isArray(reviewCardsRaw)) return null;
+    for (const c of reviewCardsRaw) {
+      if (
+        !c ||
+        typeof c !== 'object' ||
+        typeof (c as ReviewCard).id !== 'string' ||
+        typeof (c as ReviewCard).sourceSpanId !== 'string' ||
+        typeof (c as ReviewCard).summary !== 'string' ||
+        typeof (c as ReviewCard).createdAt !== 'string' ||
+        typeof (c as ReviewCard).fadesAt !== 'string'
+      ) {
+        return null;
+      }
+    }
     return {
       version: LEARNER_STATE_VERSION,
       courseId,
@@ -102,6 +119,7 @@ function parseLearnerState(
       knownSpanIds: data.knownSpanIds,
       returnQuestionSpanId: data.returnQuestionSpanId ?? null,
       wrongAnswers: data.wrongAnswers as WrongAnswerRecord[],
+      reviewCards: reviewCardsRaw as ReviewCard[],
     };
   } catch {
     return null;
@@ -131,5 +149,15 @@ export function appendWrongAnswer(
   return {
     ...state,
     wrongAnswers: [...state.wrongAnswers, { sourceSpanId, recordedAt }],
+  };
+}
+
+export function appendReviewCard(
+  state: LearnerState,
+  card: ReviewCard,
+): LearnerState {
+  return {
+    ...state,
+    reviewCards: [...state.reviewCards, card],
   };
 }
