@@ -28,6 +28,9 @@ npm test
 ```
 
 ### 5. 배포
+원격 절차·시크릿은 [../deploy/SETUP.md](../deploy/SETUP.md).
+
 ```bash
-npm run deploy
+npm run deploy:dry-run   # 업로드 없이 번들 검증
+npm run deploy           # Cloudflare Workers
 ```

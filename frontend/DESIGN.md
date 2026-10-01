@@ -72,6 +72,10 @@ frontend/
         └── events.ts  # CitationSelected / DetourInserted / SessionClosed
 ```
 
+## 환경 변수 (Vite / Pages)
+
+- `VITE_API_BASE_URL`: Worker origin (끝 `/` 없이). `lib/apiBase.ts`의 `getApiBaseUrl` / `apiUrl`이 사용. 비우면 same-origin 상대 경로. 예시는 `.env.example`, 배포는 [deploy/SETUP.md](../deploy/SETUP.md).
+
 ## Commands
 
 ```bash
@@ -89,4 +93,8 @@ npm run preview
 
 # 단위 테스트 실행
 npm test
+
+# Pages 배포 dry-run (업로드 없음) / 원격 배포
+npm run deploy:pages:dry-run
+npm run deploy:pages
 ```

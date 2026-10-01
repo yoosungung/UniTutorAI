@@ -3,8 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "wrangler dev",
-    "deploy": "wrangler deploy --minify",
+    "dev": "wrangler dev --config ./wrangler.jsonc",
+    "deploy": "wrangler deploy --config ./wrangler.jsonc --minify",
+    "deploy:dry-run": "wrangler deploy --config ./wrangler.jsonc --dry-run --minify",
     "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },
