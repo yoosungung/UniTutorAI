@@ -38,5 +38,5 @@ This file provides guidance to AI coding assistants (Claude Code, Codex, Gemini,
  
 ## 3. Status
  
-backend · frontend 스켈레톤, 적응형 2분할 캔버스(YouTube iframe), CS50P L0 정적 `SourceSpan`·`knowledgeDag` 픽스처, 온보딩 경로 축소(`planned`/`skipped`/`current`)·`DetourInserted`, mock `TutorTurn` + `CitationSelected`→`startSec` seek, local-first 진도·오답, 로컬 FSRS `SessionClosed`→`ReviewCard`, 클라이언트 Math.js `formulaVerdict`, Web Push/SW `CardFaded` 알림(일 3회)이 있다. 다음: 유료 게이트·추론 라우팅.
+backend · frontend 스켈레톤, 적응형 2분할 캔버스(YouTube iframe), CS50P L0 정적 `SourceSpan`·`knowledgeDag` 픽스처, 온보딩 경로 축소(`planned`/`skipped`/`current`)·`DetourInserted`, mock `TutorTurn` + `CitationSelected`→`startSec` seek, local-first 진도·오답, 로컬 FSRS `SessionClosed`→`ReviewCard`, 클라이언트 Math.js `formulaVerdict`, Web Push/SW `CardFaded` 알림(일 3회), 무료 문답 일 5회·유료 스텁 CTA가 있다. 다음: 광고 보상 충전·추론 라우팅.
 
