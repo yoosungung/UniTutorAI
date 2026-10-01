@@ -7,6 +7,12 @@
   "vars": {
     "ENVIRONMENT": "development"
   },
+  "routes": [
+    {
+      "pattern": "api.tutor.askwho.net",
+      "custom_domain": true
+    }
+  ],
   "observability": {
     "enabled": true
   }
