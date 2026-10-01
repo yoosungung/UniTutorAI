@@ -17,13 +17,18 @@ npm run dev
 ```
 브라우저에서 `http://localhost:5173`으로 접속한다.
 
-### 3. 프로덕션 빌드 (Cloudflare Pages 배포용)
+### 3. API base (Pages → Workers)
+`.env.example`을 복사해 `VITE_API_BASE_URL`에 Worker origin을 넣는다(비우면 상대 경로). 사용처: `src/lib/apiBase.ts`.
+
+### 4. 프로덕션 빌드 / Pages
 ```bash
 npm run build
+npm run deploy:pages:dry-run   # 업로드 없음
+npm run deploy:pages           # Cloudflare Pages (project: unitutor)
 ```
-빌드 결과물은 `dist/` 폴더에 생성되며, Cloudflare Pages와 연동되어 자동 배포된다.
+상세·시크릿: [../deploy/SETUP.md](../deploy/SETUP.md).
 
-### 4. 테스트 실행
+### 5. 테스트 실행
 ```bash
 npm test
 ```

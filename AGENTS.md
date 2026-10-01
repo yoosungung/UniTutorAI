@@ -17,6 +17,7 @@ This file provides guidance to AI coding assistants (Claude Code, Codex, Gemini,
 | `ROADMAP.md` | 수행 계획(마일스톤·순서·미결정 항목) | 루트 |
 | `<comp>/DESIGN.md` | 컴포넌트 *내부* 설계 + `## Commands` (빌드/실행/테스트) | `backend/`, `frontend/`, `content/` |
 | `frontend/THEME.md` | 프론트엔드 UI/UX 디자인 시스템 및 테마 가이드 | `frontend/` |
+| `deploy/SETUP.md` | Cloudflare Workers + Pages 배포 런북 (시크릿·dry-run·순서) | `deploy/` |
  
 규칙:
  
@@ -25,7 +26,7 @@ This file provides guidance to AI coding assistants (Claude Code, Codex, Gemini,
 - **README.md vs ARCHITECTURE.md / DESIGN.md / PRODUCT.md.** README는 **인간 독자**(저장소 방문자·기여자)용이다. 계약·내부 설계·제품 경험은 README에 복사하지 않고 [docs/PRODUCT.md](docs/PRODUCT.md)·[ARCHITECTURE.md](ARCHITECTURE.md)·`<comp>/DESIGN.md`로 **링크만** 한다. 
 - **배포 가능한 패키지·실행 하네스**에는 README를 둘 수 있다 — 해당 디렉터리 **로컬 사용법만**.
 - 파일이 새로 생기거나 용도가 바뀌면 위 표를 즉시 갱신한다.
-- 배포 런북은 `deploy/SETUP.md`, Kustomize 베이스는 `deploy/k8s/base/`, PR/push CI는 `.github/workflows/ci.yml`. 빈 stub을 만들지 않는다.
+- 배포 런북은 [deploy/SETUP.md](deploy/SETUP.md)(Workers + Pages). PR/push CI는 `.github/workflows/ci.yml`. k8s/Kustomize 경로를 만들지 않는다. 빈 stub을 만들지 않는다.
  
 ## 2. 수행 방법 (How we work in this repo)
  
