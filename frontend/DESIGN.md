@@ -29,7 +29,7 @@ UniTutor의 프론트엔드 컴포넌트 내부 설계다. 컴포넌트 간 계�
    - 온보딩 후 `PathView`에 `planned`/`skipped`/`current`/`detour` 표시.
    - `DetourInserted` 시 `returnToSpanId` 채우고, 우회 종료 후 같은 캔버스에서 원래 질문 복귀.
 4. **클라이언트 사이드 연산 오프로딩 (Zero Server Cost)**
-   - **수식 실시간 판정**: Math.js 또는 Pyodide(WASM Python/SymPy)를 브라우저 내에서 구동하여 서버 호출 없이 기호 연산 정오답 판정.
+   - **수식 실시간 판정**: **Math.js** (`lib/mathCheck.ts`). Pyodide는 초기 WASM·로드 비용이 커서 이번 범위에서 채택하지 않음. `checkFormula(learner, expected)` → `correct`|`incorrect`; UI는 `formulaVerdict`를 튜터 문장보다 먼저 반영하고, incorrect여도 정답/풀이를 `TutorTurn`에 싣지 않는다.
    - **KaTeX 렌더러**: 입력 즉시 LaTeX 수식을 실시간 렌더링.
    - **기억 스케줄러 (`ts-fsrs`)**: FSRS 머신러닝 스케줄러를 브라우저 로컬에서 계산하여 `ReviewCard` 생성 및 망각 곡선 추적. `lib/fsrs.ts`가 `SessionClosed` → `ReviewCard`(`fadesAt`=`card.due`)를 만든다. 기본 파라미터는 `enable_fuzz=false`(로컬 상수).
    - **로컬 우선 영속화**: `lib/storage.ts`가 `localStorage` 키 `unitutor:learner:{CourseRef.id}`에 진도(`PathItem[]`·`current`/`detour`)·오답(`wrongAnswers`)·`reviewCards`를 저장·복원한다. quota/private 모드 실패 시 no-op(graceful degrade). `lib/sessionClose.ts`가 세션 종료 시 카드 1장을 append. IndexedDB·Web Push/`CardFaded`는 후속.
@@ -64,7 +64,7 @@ frontend/
     │   ├── detour.ts  # DetourInserted / returnToSpanId
     │   ├── fsrs.ts    # ts-fsrs 기반 복습 주기 계산 엔진
     │   ├── sessionClose.ts # SessionClosed → ReviewCard + storage append
-    │   ├── mathCheck.ts # 클라이언트 수식 동치 판정 로직 (MathJS/WASM)
+    │   ├── mathCheck.ts # Math.js 수식 동치 판정 → formulaVerdict
     │   └── storage.ts # localStorage 진도·오답·reviewCards (키 unitutor:learner:{courseId})
     ├── hooks/         # 뷰포트 반응형 훅, SSE 스트리밍 훅 등
     └── types/         # 프론트엔드 전용 내부 타입 정의

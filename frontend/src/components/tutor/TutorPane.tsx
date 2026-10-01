@@ -4,9 +4,12 @@ import type { ReactNode } from 'react';
 export function TutorPane({
   layoutLabel,
   children,
+  footer,
 }: {
   layoutLabel: string;
   children?: ReactNode;
+  /** Formula / answer entry — defaults to a plain text field. */
+  footer?: ReactNode;
 }) {
   return (
     <div
@@ -44,20 +47,22 @@ export function TutorPane({
           paddingTop: 8,
         }}
       >
-        <input
-          type="text"
-          placeholder="답변 또는 수식을 입력하세요..."
-          aria-label="튜터 답변 입력"
-          style={{
-            width: '100%',
-            padding: 10,
-            backgroundColor: 'var(--bg-elevated, #1F2937)',
-            border: '1px solid var(--border-subtle, #1E293B)',
-            borderRadius: 6,
-            color: 'var(--text-primary, #F8FAFC)',
-            boxSizing: 'border-box',
-          }}
-        />
+        {footer ?? (
+          <input
+            type="text"
+            placeholder="답변 또는 수식을 입력하세요..."
+            aria-label="튜터 답변 입력"
+            style={{
+              width: '100%',
+              padding: 10,
+              backgroundColor: 'var(--bg-elevated, #1F2937)',
+              border: '1px solid var(--border-subtle, #1E293B)',
+              borderRadius: 6,
+              color: 'var(--text-primary, #F8FAFC)',
+              boxSizing: 'border-box',
+            }}
+          />
+        )}
       </footer>
     </div>
   );
