@@ -3,6 +3,7 @@ import { StudyCanvas } from './components/canvas/StudyCanvas';
 import { OnboardingInterview } from './components/onboarding/OnboardingInterview';
 import { PathView } from './components/path/PathView';
 import { FormulaInput } from './components/math/FormulaInput';
+import { QuotaGate } from './components/tutor/QuotaGate';
 import { TutorPane } from './components/tutor/TutorPane';
 import { TutorTurnView } from './components/tutor/TutorTurnView';
 import {
@@ -31,6 +32,12 @@ import {
   saveLearnerState,
   type WrongAnswerRecord,
 } from './lib/storage';
+import {
+  loadEntitlement,
+  setPaidUnlock,
+  tryConsumeTutorTurn,
+  type TutorEntitlement,
+} from './lib/tutorQuota';
 import { useLayoutMode } from './hooks/useLayoutMode';
 import type { CitationSelected } from './types/events';
 import type { PathItem } from './types/path';
@@ -89,6 +96,10 @@ export default function App() {
     () =>
       typeof Notification !== 'undefined' ? Notification.permission : 'denied',
   );
+  const [entitlement, setEntitlement] = useState<TutorEntitlement>(() =>
+    loadEntitlement(),
+  );
+  const [tutorAllowed, setTutorAllowed] = useState(true);
 
   useEffect(() => {
     saveLearnerState({
@@ -154,6 +165,15 @@ export default function App() {
   }, [questionSpanId]);
 
   const turn = formulaTurn ?? baseTurn;
+
+  useEffect(() => {
+    if (!turn) {
+      setTutorAllowed(true);
+      return;
+    }
+    const result = tryConsumeTutorTurn(turn.id, new Date(), entitlement);
+    setTutorAllowed(result.allowed);
+  }, [turn?.id, entitlement.plan]);
 
   function toggleKnown(spanId: string) {
     setKnownSpanIds((prev) =>
@@ -303,7 +323,7 @@ export default function App() {
             <TutorPane
               layoutLabel={layoutLabel}
               footer={
-                baseTurn ? (
+                tutorAllowed && baseTurn ? (
                   <FormulaInput
                     expectedExpr={DEMO_EXPECTED_EXPR}
                     onChecked={(_verdict, learnerExpr) => {
@@ -319,14 +339,22 @@ export default function App() {
                 ) : undefined
               }
             >
-              {turn && (
-                <TutorTurnView
-                  turn={turn}
-                  spans={CS50P_LECTURE_0_SPANS}
-                  onCitationSelected={(e: CitationSelected) =>
-                    setSeekSec(e.startSec)
-                  }
+              {!tutorAllowed ? (
+                <QuotaGate
+                  onUnlockPaid={() => {
+                    setEntitlement(setPaidUnlock());
+                  }}
                 />
+              ) : (
+                turn && (
+                  <TutorTurnView
+                    turn={turn}
+                    spans={CS50P_LECTURE_0_SPANS}
+                    onCitationSelected={(e: CitationSelected) =>
+                      setSeekSec(e.startSec)
+                    }
+                  />
+                )
               )}
             </TutorPane>
           }
