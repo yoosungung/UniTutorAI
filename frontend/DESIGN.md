@@ -53,18 +53,18 @@ frontend/
     ├── main.tsx       # React 앱 마운트 진입점
     ├── App.tsx        # 최상위 라우터 및 글로벌 레이아웃
     ├── components/    # UI 컴포넌트
-│   ├── canvas/    # 적응형 2분할 캔버스 및 분할 핸들러
-│   ├── player/    # YouTube IFrame 플레이어 래퍼 (타임스탬프 딥링크)
-│   ├── tutor/     # 소크라테스 튜터 대화창 및 접힌 속생각(Thinking Traces)
-│   ├── path/      # 학습 경로(planned/skipped/current/detour)
-│   ├── onboarding/# 아는 개념 체크 → 경로 축소
-│   └── math/      # KaTeX 수식 입력기 및 클라이언트 수식 판정기
-├── lib/           # 클라이언트 로컬 엔진
-│   ├── pathFromOnboarding.ts # 온보딩 → PathItem[]
-│   ├── detour.ts  # DetourInserted / returnToSpanId
-│   ├── fsrs.ts    # ts-fsrs 기반 복습 주기 계산 엔진
-│   ├── mathCheck.ts # 클라이언트 수식 동치 판정 로직 (MathJS/WASM)
-│   └── storage.ts # IndexedDB 로컬 상태 영속화
+    │   ├── canvas/    # 적응형 2분할 캔버스 및 분할 핸들러
+    │   ├── player/    # YouTube IFrame 플레이어 래퍼 (타임스탬프 딥링크)
+    │   ├── tutor/     # 소크라테스 튜터 대화창 및 접힌 속생각(Thinking Traces)
+    │   ├── path/      # 학습 경로(planned/skipped/current/detour)
+    │   ├── onboarding/# 아는 개념 체크 → 경로 축소
+    │   └── math/      # KaTeX 수식 입력기 및 클라이언트 수식 판정기
+    ├── lib/           # 클라이언트 로컬 엔진
+    │   ├── pathFromOnboarding.ts # 온보딩 → PathItem[]
+    │   ├── detour.ts  # DetourInserted / returnToSpanId
+    │   ├── fsrs.ts    # ts-fsrs 기반 복습 주기 계산 엔진
+    │   ├── mathCheck.ts # 클라이언트 수식 동치 판정 로직 (MathJS/WASM)
+    │   └── storage.ts # IndexedDB 로컬 상태 영속화
     ├── hooks/         # 뷰포트 반응형 훅, SSE 스트리밍 훅 등
     └── types/         # 프론트엔드 전용 내부 타입 정의
 ```
