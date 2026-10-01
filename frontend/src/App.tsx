@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { StudyCanvas } from './components/canvas/StudyCanvas';
 import { OnboardingInterview } from './components/onboarding/OnboardingInterview';
 import { PathView } from './components/path/PathView';
+import { FormulaInput } from './components/math/FormulaInput';
 import { TutorPane } from './components/tutor/TutorPane';
 import { TutorTurnView } from './components/tutor/TutorTurnView';
 import {
@@ -15,6 +16,7 @@ import {
   insertDetour,
   pickPrerequisiteDetour,
 } from './lib/detour';
+import { applyFormulaVerdict } from './lib/mathCheck';
 import { buildPathFromOnboarding } from './lib/pathFromOnboarding';
 import { closeSession } from './lib/sessionClose';
 import {
@@ -28,6 +30,9 @@ import type { CitationSelected } from './types/events';
 import type { PathItem } from './types/path';
 import type { ReviewCard } from './types/reviewCard';
 import type { TutorTurn } from './types/tutorTurn';
+
+/** Demo expected expression for client formulaVerdict (T3-02). */
+const DEMO_EXPECTED_EXPR = '4';
 
 function turnForSpan(spanId: string): TutorTurn {
   const span = CS50P_LECTURE_0_SPANS.find((s) => s.id === spanId);
@@ -73,6 +78,7 @@ export default function App() {
   const [lastClosedSummary, setLastClosedSummary] = useState<string | null>(
     null,
   );
+  const [formulaTurn, setFormulaTurn] = useState<TutorTurn | null>(null);
 
   useEffect(() => {
     saveLearnerState({
@@ -98,10 +104,16 @@ export default function App() {
       ? active.sourceSpanId
       : (returnQuestionSpanId ?? focusSpanId);
 
-  const turn = useMemo(
+  const baseTurn = useMemo(
     () => (questionSpanId ? turnForSpan(questionSpanId) : null),
     [questionSpanId],
   );
+
+  useEffect(() => {
+    setFormulaTurn(null);
+  }, [questionSpanId]);
+
+  const turn = formulaTurn ?? baseTurn;
 
   function toggleKnown(spanId: string) {
     setKnownSpanIds((prev) =>
@@ -238,7 +250,25 @@ export default function App() {
           course={CS50P_LECTURE_0}
           seekSec={seekSec}
           tutor={
-            <TutorPane layoutLabel={layoutLabel}>
+            <TutorPane
+              layoutLabel={layoutLabel}
+              footer={
+                baseTurn ? (
+                  <FormulaInput
+                    expectedExpr={DEMO_EXPECTED_EXPR}
+                    onChecked={(_verdict, learnerExpr) => {
+                      setFormulaTurn(
+                        applyFormulaVerdict({
+                          turn: baseTurn,
+                          learnerExpr,
+                          expectedExpr: DEMO_EXPECTED_EXPR,
+                        }).turn,
+                      );
+                    }}
+                  />
+                ) : undefined
+              }
+            >
               {turn && (
                 <TutorTurnView
                   turn={turn}
