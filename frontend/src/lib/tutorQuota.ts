@@ -2,6 +2,9 @@
 export const DAILY_FREE_TUTOR_TURN_LIMIT = 5 as const;
 export const DAILY_FREE_TUTOR_TURNS = DAILY_FREE_TUTOR_TURN_LIMIT;
 
+/** Locked in ROADMAP — rewarded ad grants this many extra turns per watch. */
+export const AD_REWARD_TUTOR_TURNS = 3 as const;
+
 export const TUTOR_QUOTA_KEY = 'unitutor:tutor-quota';
 export const ENTITLEMENT_KEY = 'unitutor:entitlement';
 
@@ -10,6 +13,8 @@ export type TutorQuotaLedger = {
   day: string;
   count: number;
   consumedTurnIds: string[];
+  /** Extra turns from rewarded-ad stubs (same UTC day). */
+  bonusTurns: number;
 };
 
 export type TutorEntitlement = {
@@ -28,7 +33,7 @@ export function utcDayKey(now: Date): string {
 }
 
 function emptyLedger(day: string): TutorQuotaLedger {
-  return { day, count: 0, consumedTurnIds: [] };
+  return { day, count: 0, consumedTurnIds: [], bonusTurns: 0 };
 }
 
 function readRaw(key: string): string | null {
@@ -48,11 +53,18 @@ function writeRaw(key: string, value: string): boolean {
   }
 }
 
+export function effectiveFreeLimit(
+  ledger: TutorQuotaLedger,
+  base: number = DAILY_FREE_TUTOR_TURN_LIMIT,
+): number {
+  return base + Math.max(0, ledger.bonusTurns);
+}
+
 export function saveTutorQuotaLedger(ledger: TutorQuotaLedger): boolean {
   return writeRaw(TUTOR_QUOTA_KEY, JSON.stringify(ledger));
 }
 
-/** Load ledger; roll count to 0 when the UTC day changes. */
+/** Load ledger; roll count/bonus to 0 when the UTC day changes. */
 export function loadTutorQuotaLedger(now: Date = new Date()): TutorQuotaLedger {
   const day = utcDayKey(now);
   const raw = readRaw(TUTOR_QUOTA_KEY);
@@ -65,7 +77,11 @@ export function loadTutorQuotaLedger(now: Date = new Date()): TutorQuotaLedger {
       : [];
     const count =
       typeof data.count === 'number' && data.count >= 0 ? data.count : 0;
-    return { day, count, consumedTurnIds };
+    const bonusTurns =
+      typeof data.bonusTurns === 'number' && data.bonusTurns >= 0
+        ? data.bonusTurns
+        : 0;
+    return { day, count, consumedTurnIds, bonusTurns };
   } catch {
     return emptyLedger(day);
   }
@@ -98,20 +114,41 @@ export function setPaidUnlock(): TutorEntitlement {
   return next;
 }
 
+/**
+ * Stub rewarded-ad watch — grants AD_REWARD_TUTOR_TURNS without an ad SDK.
+ * App inference cost is treated as offset by the ad path (PRODUCT §6).
+ */
+export function grantAdReward(
+  now: Date = new Date(),
+  reward: number = AD_REWARD_TUTOR_TURNS,
+): TutorQuotaLedger {
+  const day = utcDayKey(now);
+  let ledger = loadTutorQuotaLedger(now);
+  if (ledger.day !== day) ledger = emptyLedger(day);
+  const next: TutorQuotaLedger = {
+    ...ledger,
+    day,
+    bonusTurns: ledger.bonusTurns + Math.max(0, reward),
+  };
+  saveTutorQuotaLedger(next);
+  return next;
+}
+
 export function remainingFreeTurns(
   now: Date = new Date(),
-  limit: number = DAILY_FREE_TUTOR_TURN_LIMIT,
+  base: number = DAILY_FREE_TUTOR_TURN_LIMIT,
 ): number {
-  return Math.max(0, limit - loadTutorQuotaLedger(now).count);
+  const ledger = loadTutorQuotaLedger(now);
+  return Math.max(0, effectiveFreeLimit(ledger, base) - ledger.count);
 }
 
 export function canShowTutorTurn(
   ledger: TutorQuotaLedger,
   entitlement: TutorEntitlement,
-  limit: number = DAILY_FREE_TUTOR_TURN_LIMIT,
+  base: number = DAILY_FREE_TUTOR_TURN_LIMIT,
 ): boolean {
   if (entitlement.plan === 'paid') return true;
-  return ledger.count < limit;
+  return ledger.count < effectiveFreeLimit(ledger, base);
 }
 
 /**
@@ -122,7 +159,7 @@ export function tryConsumeTutorTurn(
   turnId: string,
   now: Date = new Date(),
   entitlement: TutorEntitlement = loadEntitlement(),
-  limit: number = DAILY_FREE_TUTOR_TURN_LIMIT,
+  base: number = DAILY_FREE_TUTOR_TURN_LIMIT,
 ): TryConsumeResult {
   const day = utcDayKey(now);
   let ledger = loadTutorQuotaLedger(now);
@@ -136,6 +173,7 @@ export function tryConsumeTutorTurn(
     return { allowed: true, ledger, entitlement };
   }
 
+  const limit = effectiveFreeLimit(ledger, base);
   if (ledger.count >= limit) {
     return {
       allowed: false,
@@ -149,6 +187,7 @@ export function tryConsumeTutorTurn(
     day,
     count: ledger.count + 1,
     consumedTurnIds: [...ledger.consumedTurnIds, turnId],
+    bonusTurns: ledger.bonusTurns,
   };
   saveTutorQuotaLedger(next);
   return { allowed: true, ledger: next, entitlement };

@@ -33,6 +33,7 @@ import {
   type WrongAnswerRecord,
 } from './lib/storage';
 import {
+  grantAdReward,
   loadEntitlement,
   setPaidUnlock,
   tryConsumeTutorTurn,
@@ -343,6 +344,18 @@ export default function App() {
                 <QuotaGate
                   onUnlockPaid={() => {
                     setEntitlement(setPaidUnlock());
+                  }}
+                  onWatchAdReward={() => {
+                    grantAdReward(new Date());
+                    // Re-run consume against the same turn id after bonus grant.
+                    if (turn) {
+                      const result = tryConsumeTutorTurn(
+                        turn.id,
+                        new Date(),
+                        entitlement,
+                      );
+                      setTutorAllowed(result.allowed);
+                    }
                   }}
                 />
               ) : (
