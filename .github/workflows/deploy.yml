@@ -1,0 +1,63 @@
+# UniTutor Worker → Pages → Cloudflare.
+# Secrets: CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID
+# Manual: gh workflow run deploy.yml
+# D1 migrations: N/A until a binding exists (then apply → deploy like sw-factory).
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: |
+            backend/package-lock.json
+            frontend/package-lock.json
+
+      - name: Install backend
+        working-directory: backend
+        run: npm ci
+
+      - name: Deploy Worker
+        working-directory: backend
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: npm run deploy
+
+      - name: Install frontend
+        working-directory: frontend
+        run: npm ci
+
+      - name: Deploy Pages
+        working-directory: frontend
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          VITE_API_BASE_URL: https://api.tutor.askwho.net
+        run: npm run deploy:pages
+
+      - name: Smoke
+        run: |
+          set -euo pipefail
+          curl -fsS --retry 8 --retry-all-errors --retry-delay 3 \
+            https://api.tutor.askwho.net/health
+          curl -fsS --retry 8 --retry-all-errors --retry-delay 3 \
+            -o /dev/null https://tutor.askwho.net/

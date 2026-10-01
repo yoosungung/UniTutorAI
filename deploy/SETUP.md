@@ -94,8 +94,24 @@ Pages 빌드 env에 `VITE_API_BASE_URL=https://api.tutor.askwho.net`을 넣는�
 
 ## CI
 
-[`.github/workflows/ci.yml`](../.github/workflows/ci.yml): backend test + `deploy:dry-run`, frontend test + build(+ pages dry-run).  
-원격 `deploy` 워크플로는 토큰이 준비되면 별도 추가한다(빈 stub 금지).
+[`.github/workflows/ci.yml`](../.github/workflows/ci.yml): backend test + `deploy:dry-run`, frontend test + build(+ pages dry-run).
+
+### Remote deploy (GitHub Actions)
+
+[`.github/workflows/deploy.yml`](../.github/workflows/deploy.yml) — sw-factory `deploy.yml` 패턴:
+
+- `on:` `push` `main` + `workflow_dispatch`
+- Secrets: `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID` (repo Actions secrets)
+- 순서: Worker `npm run deploy` → Pages `deploy:pages` (`VITE_API_BASE_URL=https://api.tutor.askwho.net`)
+- D1 `migrations apply`: **N/A** (바인딩 없음; 생기면 apply → deploy로 확장)
+- Smoke: `https://api.tutor.askwho.net/health` + `https://tutor.askwho.net/`
+
+```bash
+# 수동 재배포
+gh workflow run deploy.yml --repo yoosungung/UniTutorAI
+```
+
+시크릿이 없으면 워크플로는 실패한다 — 파일은 merge해 두고 `prod:` 증거는 시크릿 준비 후로 미룬다.
 
 ## Verify (원격 배포 후)
 
