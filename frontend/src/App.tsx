@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { StudyCanvas } from './components/canvas/StudyCanvas';
 import { OnboardingInterview } from './components/onboarding/OnboardingInterview';
 import { PathView } from './components/path/PathView';
@@ -16,6 +16,12 @@ import {
   pickPrerequisiteDetour,
 } from './lib/detour';
 import { buildPathFromOnboarding } from './lib/pathFromOnboarding';
+import {
+  LEARNER_STATE_VERSION,
+  loadLearnerState,
+  saveLearnerState,
+  type WrongAnswerRecord,
+} from './lib/storage';
 import { useLayoutMode } from './hooks/useLayoutMode';
 import type { CitationSelected } from './types/events';
 import type { PathItem } from './types/path';
@@ -34,14 +40,41 @@ function turnForSpan(spanId: string): TutorTurn {
   };
 }
 
+function initialFromStorage() {
+  const saved = loadLearnerState(CS50P_LECTURE_0.id);
+  return {
+    knownSpanIds: saved?.knownSpanIds ?? [],
+    path: saved?.path ?? null,
+    returnQuestionSpanId: saved?.returnQuestionSpanId ?? null,
+    wrongAnswers: saved?.wrongAnswers ?? [],
+  };
+}
+
 export default function App() {
   const layout = useLayoutMode();
   const [seekSec, setSeekSec] = useState<number | undefined>(undefined);
-  const [knownSpanIds, setKnownSpanIds] = useState<string[]>([]);
-  const [path, setPath] = useState<PathItem[] | null>(null);
+  const hydrated = useMemo(() => initialFromStorage(), []);
+  const [knownSpanIds, setKnownSpanIds] = useState<string[]>(
+    () => hydrated.knownSpanIds,
+  );
+  const [path, setPath] = useState<PathItem[] | null>(() => hydrated.path);
   const [returnQuestionSpanId, setReturnQuestionSpanId] = useState<
     string | null
-  >(null);
+  >(() => hydrated.returnQuestionSpanId);
+  const [wrongAnswers, setWrongAnswers] = useState<WrongAnswerRecord[]>(
+    () => hydrated.wrongAnswers,
+  );
+
+  useEffect(() => {
+    saveLearnerState({
+      version: LEARNER_STATE_VERSION,
+      courseId: CS50P_LECTURE_0.id,
+      path,
+      knownSpanIds,
+      returnQuestionSpanId,
+      wrongAnswers,
+    });
+  }, [path, knownSpanIds, returnQuestionSpanId, wrongAnswers]);
 
   const layoutLabel =
     layout === 'stacked'
@@ -85,12 +118,17 @@ export default function App() {
       active.sourceSpanId,
     );
     if (!detourSpanId) return;
+    const stuckSpanId = active.sourceSpanId;
     const { path: next } = insertDetour({
       path,
-      stuckSpanId: active.sourceSpanId,
+      stuckSpanId,
       detourSpanId,
     });
-    setReturnQuestionSpanId(active.sourceSpanId);
+    setWrongAnswers((prev) => [
+      ...prev,
+      { sourceSpanId: stuckSpanId, recordedAt: new Date().toISOString() },
+    ]);
+    setReturnQuestionSpanId(stuckSpanId);
     setPath(next);
     const detourSpan = CS50P_LECTURE_0_SPANS.find((s) => s.id === detourSpanId);
     if (detourSpan) setSeekSec(detourSpan.startSec);

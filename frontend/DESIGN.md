@@ -32,7 +32,7 @@ UniTutor의 프론트엔드 컴포넌트 내부 설계다. 컴포넌트 간 계�
    - **수식 실시간 판정**: Math.js 또는 Pyodide(WASM Python/SymPy)를 브라우저 내에서 구동하여 서버 호출 없이 기호 연산 정오답 판정.
    - **KaTeX 렌더러**: 입력 즉시 LaTeX 수식을 실시간 렌더링.
    - **기억 스케줄러 (`ts-fsrs`)**: FSRS 머신러닝 스케줄러를 브라우저 로컬에서 계산하여 `ReviewCard` 생성 및 망각 곡선 추적.
-   - **로컬 우선 영속화**: IndexedDB / LocalStorage를 통해 진도와 복습 카드를 로컬에 1차 저장.
+   - **로컬 우선 영속화**: `lib/storage.ts`가 `localStorage` 키 `unitutor:learner:{CourseRef.id}`에 진도(`PathItem[]`·`current`/`detour`)·오답(`wrongAnswers`)을 저장·복원한다. quota/private 모드 실패 시 no-op(graceful degrade). FSRS/`ReviewCard`·IndexedDB는 후속.
 5. **튜터 상호작용 및 스트리밍 처리**
    - 백엔드 Workers의 SSE 스트림을 수신하여 실시간 튜터 말풍선 렌더링.
    - 3단계 에스컬레이션(힌트 반복 시 직전 단서 설명 요구)의 1차 감지 및 템플릿 처리.
@@ -64,7 +64,7 @@ frontend/
     │   ├── detour.ts  # DetourInserted / returnToSpanId
     │   ├── fsrs.ts    # ts-fsrs 기반 복습 주기 계산 엔진
     │   ├── mathCheck.ts # 클라이언트 수식 동치 판정 로직 (MathJS/WASM)
-    │   └── storage.ts # IndexedDB 로컬 상태 영속화
+    │   └── storage.ts # localStorage 진도·오답 (키 unitutor:learner:{courseId})
     ├── hooks/         # 뷰포트 반응형 훅, SSE 스트리밍 훅 등
     └── types/         # 프론트엔드 전용 내부 타입 정의
 ```
