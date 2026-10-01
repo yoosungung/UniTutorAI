@@ -20,11 +20,13 @@ describe('checkFormula', () => {
   it('returns correct when learner expression equals expected', () => {
     expect(checkFormula('2 + 2', '4')).toBe('correct');
     expect(checkFormula('(x+1)^2', 'x^2 + 2*x + 1')).toBe('correct');
+    expect(checkFormula('(a+b)^2', 'a^2 + 2*a*b + b^2')).toBe('correct');
   });
 
   it('returns incorrect when expressions are not equivalent', () => {
     expect(checkFormula('2 + 3', '4')).toBe('incorrect');
     expect(checkFormula('x + 1', 'x + 2')).toBe('incorrect');
+    expect(checkFormula('sin(x)', 'cos(x)')).toBe('incorrect');
   });
 
   it('returns incorrect on empty or unparseable input', () => {

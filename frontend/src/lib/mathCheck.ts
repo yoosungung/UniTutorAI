@@ -1,4 +1,11 @@
-import { evaluate, simplify } from 'mathjs';
+import {
+  evaluate,
+  isSymbolNode,
+  parse,
+  rationalize,
+  simplify,
+  type MathNode,
+} from 'mathjs';
 import type { FormulaVerdict, TutorTurn } from '../types/tutorTurn';
 
 export type FormulaCheckResult = {
@@ -7,45 +14,7 @@ export type FormulaCheckResult = {
 };
 
 const NUMERIC_EPS = 1e-9;
-const SAMPLE_POINTS = [-2, -1, 0, 1, 2, 3.5];
-
-function nearlyEqual(a: number, b: number): boolean {
-  return Math.abs(a - b) < NUMERIC_EPS;
-}
-
-/** Probe free variables so expanded forms like (x+1)^2 match x^2+2x+1. */
-function sampleEquivalent(learner: string, expected: string): boolean {
-  const scopeKeys = new Set<string>();
-  for (const expr of [learner, expected]) {
-    const matches = expr.match(/\b[a-zA-Z]\b/g);
-    if (matches) for (const m of matches) scopeKeys.add(m);
-  }
-  const vars = [...scopeKeys];
-  if (vars.length === 0) {
-    try {
-      const a = evaluate(learner);
-      const b = evaluate(expected);
-      return typeof a === 'number' && typeof b === 'number' && nearlyEqual(a, b);
-    } catch {
-      return false;
-    }
-  }
-
-  for (const point of SAMPLE_POINTS) {
-    const scope: Record<string, number> = {};
-    for (const v of vars) scope[v] = point;
-    try {
-      const a = evaluate(learner, scope);
-      const b = evaluate(expected, scope);
-      if (typeof a !== 'number' || typeof b !== 'number' || !nearlyEqual(a, b)) {
-        return false;
-      }
-    } catch {
-      return false;
-    }
-  }
-  return true;
-}
+const SAMPLE_POINTS = [-2, -1, -0.5, 0, 0.5, 1, 2, 3, Math.PI / 4];
 
 /**
  * Client-side formula equivalence via Math.js (no server sandbox).
@@ -63,20 +32,63 @@ export function checkFormula(
     const a = evaluate(learner);
     const b = evaluate(expected);
     if (typeof a === 'number' && typeof b === 'number') {
-      return nearlyEqual(a, b) ? 'correct' : 'incorrect';
+      return Math.abs(a - b) < NUMERIC_EPS ? 'correct' : 'incorrect';
     }
   } catch {
-    // symbolic / with free vars
+    // fall through — free symbols or non-numeric forms
   }
 
-  if (sampleEquivalent(learner, expected)) return 'correct';
+  try {
+    const residual = rationalize(`(${learner}) - (${expected})`);
+    if (residual.toString() === '0') return 'correct';
+  } catch {
+    // rationalize cannot solve some transcendental diffs
+  }
 
   try {
     const sa = simplify(learner).toString();
     const sb = simplify(expected).toString();
-    return sa === sb ? 'correct' : 'incorrect';
+    if (sa === sb) return 'correct';
   } catch {
-    return 'incorrect';
+    // ignore
+  }
+
+  if (agreeOnSamples(learner, expected)) return 'correct';
+  return 'incorrect';
+}
+
+function freeSymbols(expr: string): string[] {
+  try {
+    const node = parse(expr);
+    const names = new Set<string>();
+    node.traverse((n: MathNode) => {
+      if (isSymbolNode(n)) names.add(n.name);
+    });
+    return [...names];
+  } catch {
+    return [];
+  }
+}
+
+function agreeOnSamples(learner: string, expected: string): boolean {
+  const symbols = [
+    ...new Set([...freeSymbols(learner), ...freeSymbols(expected)]),
+  ];
+  if (symbols.length === 0) return false;
+
+  try {
+    for (const t of SAMPLE_POINTS) {
+      const scope: Record<string, number> = {};
+      for (const name of symbols) scope[name] = t;
+      const a = evaluate(learner, scope);
+      const b = evaluate(expected, scope);
+      if (typeof a !== 'number' || typeof b !== 'number') return false;
+      if (!Number.isFinite(a) || !Number.isFinite(b)) return false;
+      if (Math.abs(a - b) >= NUMERIC_EPS) return false;
+    }
+    return true;
+  } catch {
+    return false;
   }
 }
 
