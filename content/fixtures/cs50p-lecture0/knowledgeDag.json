@@ -1,0 +1,98 @@
+{
+  "courseId": "cs50p-2022-lecture-0",
+  "nodes": [
+    "cs50p-2022-lecture-0:span-001",
+    "cs50p-2022-lecture-0:span-002",
+    "cs50p-2022-lecture-0:span-003",
+    "cs50p-2022-lecture-0:span-004",
+    "cs50p-2022-lecture-0:span-005",
+    "cs50p-2022-lecture-0:span-006",
+    "cs50p-2022-lecture-0:span-007",
+    "cs50p-2022-lecture-0:span-008",
+    "cs50p-2022-lecture-0:span-009",
+    "cs50p-2022-lecture-0:span-010",
+    "cs50p-2022-lecture-0:span-011",
+    "cs50p-2022-lecture-0:span-012",
+    "cs50p-2022-lecture-0:span-013",
+    "cs50p-2022-lecture-0:span-014",
+    "cs50p-2022-lecture-0:span-015",
+    "cs50p-2022-lecture-0:span-016",
+    "cs50p-2022-lecture-0:span-017",
+    "cs50p-2022-lecture-0:span-018",
+    "cs50p-2022-lecture-0:span-019"
+  ],
+  "edges": [
+    {
+      "from": "cs50p-2022-lecture-0:span-001",
+      "to": "cs50p-2022-lecture-0:span-002"
+    },
+    {
+      "from": "cs50p-2022-lecture-0:span-002",
+      "to": "cs50p-2022-lecture-0:span-003"
+    },
+    {
+      "from": "cs50p-2022-lecture-0:span-003",
+      "to": "cs50p-2022-lecture-0:span-004"
+    },
+    {
+      "from": "cs50p-2022-lecture-0:span-004",
+      "to": "cs50p-2022-lecture-0:span-005"
+    },
+    {
+      "from": "cs50p-2022-lecture-0:span-005",
+      "to": "cs50p-2022-lecture-0:span-006"
+    },
+    {
+      "from": "cs50p-2022-lecture-0:span-006",
+      "to": "cs50p-2022-lecture-0:span-007"
+    },
+    {
+      "from": "cs50p-2022-lecture-0:span-007",
+      "to": "cs50p-2022-lecture-0:span-008"
+    },
+    {
+      "from": "cs50p-2022-lecture-0:span-008",
+      "to": "cs50p-2022-lecture-0:span-009"
+    },
+    {
+      "from": "cs50p-2022-lecture-0:span-009",
+      "to": "cs50p-2022-lecture-0:span-010"
+    },
+    {
+      "from": "cs50p-2022-lecture-0:span-010",
+      "to": "cs50p-2022-lecture-0:span-011"
+    },
+    {
+      "from": "cs50p-2022-lecture-0:span-011",
+      "to": "cs50p-2022-lecture-0:span-012"
+    },
+    {
+      "from": "cs50p-2022-lecture-0:span-012",
+      "to": "cs50p-2022-lecture-0:span-013"
+    },
+    {
+      "from": "cs50p-2022-lecture-0:span-013",
+      "to": "cs50p-2022-lecture-0:span-014"
+    },
+    {
+      "from": "cs50p-2022-lecture-0:span-014",
+      "to": "cs50p-2022-lecture-0:span-015"
+    },
+    {
+      "from": "cs50p-2022-lecture-0:span-015",
+      "to": "cs50p-2022-lecture-0:span-016"
+    },
+    {
+      "from": "cs50p-2022-lecture-0:span-016",
+      "to": "cs50p-2022-lecture-0:span-017"
+    },
+    {
+      "from": "cs50p-2022-lecture-0:span-017",
+      "to": "cs50p-2022-lecture-0:span-018"
+    },
+    {
+      "from": "cs50p-2022-lecture-0:span-018",
+      "to": "cs50p-2022-lecture-0:span-019"
+    }
+  ]
+}

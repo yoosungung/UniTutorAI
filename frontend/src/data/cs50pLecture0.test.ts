@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { CS50P_LECTURE_0, CS50P_LECTURE_0_SPANS } from './cs50pLecture0';
+import {
+  CS50P_LECTURE_0,
+  CS50P_LECTURE_0_DAG,
+  CS50P_LECTURE_0_SPANS,
+} from './cs50pLecture0';
 
 describe('cs50pLecture0 static fixture', () => {
   it('exposes CourseRef and SourceSpans without runtime indexing', () => {
@@ -14,5 +18,15 @@ describe('cs50pLecture0 static fixture', () => {
         CS50P_LECTURE_0_SPANS[i - 1].endSec,
       );
     }
+  });
+
+  it('exposes knowledge DAG nodes matching SourceSpan ids', () => {
+    expect(CS50P_LECTURE_0_DAG.courseId).toBe(CS50P_LECTURE_0.id);
+    expect(CS50P_LECTURE_0_DAG.nodes).toEqual(
+      CS50P_LECTURE_0_SPANS.map((s) => s.id),
+    );
+    expect(CS50P_LECTURE_0_DAG.edges).toHaveLength(
+      CS50P_LECTURE_0_DAG.nodes.length - 1,
+    );
   });
 });

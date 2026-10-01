@@ -6,3 +6,10 @@ export type CitationSelected = {
   sourceSpanId: string;
   startSec: number;
 };
+
+/** Stuck on a question → splice detour span with returnToSpanId. */
+export type DetourInserted = {
+  type: 'DetourInserted';
+  detourSpanId: string;
+  returnToSpanId: string;
+};
