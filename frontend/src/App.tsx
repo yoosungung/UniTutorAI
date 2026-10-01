@@ -20,6 +20,12 @@ import { applyFormulaVerdict } from './lib/mathCheck';
 import { buildPathFromOnboarding } from './lib/pathFromOnboarding';
 import { closeSession } from './lib/sessionClose';
 import {
+  ensureReviewServiceWorker,
+  processCardFadedNotifications,
+  requestReviewNotifyPermission,
+  showReviewNotification,
+} from './lib/reviewNotify';
+import {
   LEARNER_STATE_VERSION,
   loadLearnerState,
   saveLearnerState,
@@ -79,6 +85,10 @@ export default function App() {
     null,
   );
   const [formulaTurn, setFormulaTurn] = useState<TutorTurn | null>(null);
+  const [notifyPermission, setNotifyPermission] = useState<NotificationPermission>(
+    () =>
+      typeof Notification !== 'undefined' ? Notification.permission : 'denied',
+  );
 
   useEffect(() => {
     saveLearnerState({
@@ -91,6 +101,36 @@ export default function App() {
       reviewCards,
     });
   }, [path, knownSpanIds, returnQuestionSpanId, wrongAnswers, reviewCards]);
+
+  useEffect(() => {
+    void ensureReviewServiceWorker();
+  }, []);
+
+  useEffect(() => {
+    if (notifyPermission !== 'granted' || reviewCards.length === 0) return;
+
+    let cancelled = false;
+
+    async function run() {
+      const result = await processCardFadedNotifications({
+        cards: reviewCards,
+        spans: CS50P_LECTURE_0_SPANS,
+        now: new Date(),
+        permission: notifyPermission,
+        showNotification: showReviewNotification,
+      });
+      if (cancelled || result.events.length === 0) return;
+    }
+
+    void run();
+    const id = window.setInterval(() => {
+      void run();
+    }, 60_000);
+    return () => {
+      cancelled = true;
+      window.clearInterval(id);
+    };
+  }, [notifyPermission, reviewCards]);
 
   const layoutLabel =
     layout === 'stacked'
@@ -236,6 +276,16 @@ export default function App() {
           {active?.placement === 'current' && (
             <button type="button" onClick={onCloseSession}>
               세션 종료 — ReviewCard
+            </button>
+          )}
+          {notifyPermission !== 'granted' && (
+            <button
+              type="button"
+              onClick={() => {
+                void requestReviewNotifyPermission().then(setNotifyPermission);
+              }}
+            >
+              다시 보기 알림 켜기
             </button>
           )}
         </div>

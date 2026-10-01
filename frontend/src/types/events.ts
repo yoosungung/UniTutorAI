@@ -22,3 +22,12 @@ export type SessionClosed = {
   /** ISO-8601 moment the session closed. */
   closedAt: string;
 };
+
+/** ReviewCard.fadesAt reached → home surface + notify candidate. */
+export type CardFaded = {
+  type: 'CardFaded';
+  reviewCardId: string;
+  sourceSpanId: string;
+  /** Concept label used in the notification body. */
+  concept: string;
+};
