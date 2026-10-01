@@ -32,12 +32,13 @@ UniTutor의 프론트엔드 컴포넌트 내부 설계다. 컴포넌트 간 계�
    - **수식 실시간 판정**: **Math.js** (`lib/mathCheck.ts`). Pyodide는 초기 WASM·로드 비용이 커서 이번 범위에서 채택하지 않음. `checkFormula(learner, expected)` → `correct`|`incorrect`; UI는 `formulaVerdict`를 튜터 문장보다 먼저 반영하고, incorrect여도 정답/풀이를 `TutorTurn`에 싣지 않는다.
    - **KaTeX 렌더러**: 입력 즉시 LaTeX 수식을 실시간 렌더링.
    - **기억 스케줄러 (`ts-fsrs`)**: FSRS 머신러닝 스케줄러를 브라우저 로컬에서 계산하여 `ReviewCard` 생성 및 망각 곡선 추적. `lib/fsrs.ts`가 `SessionClosed` → `ReviewCard`(`fadesAt`=`card.due`)를 만든다. 기본 파라미터는 `enable_fuzz=false`(로컬 상수).
-   - **로컬 우선 영속화**: `lib/storage.ts`가 `localStorage` 키 `unitutor:learner:{CourseRef.id}`에 진도(`PathItem[]`·`current`/`detour`)·오답(`wrongAnswers`)·`reviewCards`를 저장·복원한다. quota/private 모드 실패 시 no-op(graceful degrade). `lib/sessionClose.ts`가 세션 종료 시 카드 1장을 append. IndexedDB·Web Push/`CardFaded`는 후속.
+   - **로컬 우선 영속화**: `lib/storage.ts`가 `localStorage` 키 `unitutor:learner:{CourseRef.id}`에 진도(`PathItem[]`·`current`/`detour`)·오답(`wrongAnswers`)·`reviewCards`를 저장·복원한다. quota/private 모드 실패 시 no-op(graceful degrade). `lib/sessionClose.ts`가 세션 종료 시 카드 1장을 append. IndexedDB는 후속.
 5. **튜터 상호작용 및 스트리밍 처리**
    - 백엔드 Workers의 SSE 스트림을 수신하여 실시간 튜터 말풍선 렌더링.
    - 3단계 에스컬레이션(힌트 반복 시 직전 단서 설명 요구)의 1차 감지 및 템플릿 처리.
-6. **웹 푸시 및 PWA**
-   - 서비스 워커(`sw.js`) 및 Web Push API를 이용해 카드가 흐려진 시점(`fadesAt`)에 알림 발송.
+6. **웹 푸시 및 PWA (`CardFaded`)**
+   - `public/sw.js` + `lib/reviewNotify.ts`: 알림 권한 `granted`일 때 `ReviewCard.fadesAt` 도달 카드를 `CardFaded`로 처리하고 서비스 워커 `showNotification`으로 개념 이름 알림(PRODUCT 문구).
+   - 하루 상한 **3**(ROADMAP 확정). 레저는 `localStorage` 키 `unitutor:review-notify`(UTC day·count·notifiedCardIds). 서버 Push subscription API 없음(FE local).
 
 ## 3. 내부 디렉터리 구조
 
@@ -65,13 +66,15 @@ frontend/
     │   ├── fsrs.ts    # ts-fsrs 기반 복습 주기 계산 엔진
     │   ├── sessionClose.ts # SessionClosed → ReviewCard + storage append
     │   ├── mathCheck.ts # Math.js 수식 동치 판정 → formulaVerdict
+    │   ├── reviewNotify.ts # CardFaded + SW 알림·일 3회 한도
     │   └── storage.ts # localStorage 진도·오답·reviewCards (키 unitutor:learner:{courseId})
     ├── hooks/         # 뷰포트 반응형 훅, SSE 스트리밍 훅 등
     └── types/         # 프론트엔드 전용 내부 타입 정의
         ├── reviewCard.ts # ReviewCard (ARCHITECTURE §2.4)
-        └── events.ts  # CitationSelected / DetourInserted / SessionClosed
+        └── events.ts  # CitationSelected / DetourInserted / SessionClosed / CardFaded
 ```
 
+Vite `public/sw.js`는 빌드 시 사이트 루트로 복사된다.
 ## 환경 변수 (Vite / Pages)
 
 - `VITE_API_BASE_URL`: Worker origin (끝 `/` 없이). `lib/apiBase.ts`의 `getApiBaseUrl` / `apiUrl`이 사용. 비우면 same-origin 상대 경로. 예시는 `.env.example`, 배포는 [deploy/SETUP.md](../deploy/SETUP.md).
