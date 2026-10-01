@@ -1,9 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
+  AD_REWARD_TUTOR_TURNS,
   DAILY_FREE_TUTOR_TURN_LIMIT,
   ENTITLEMENT_KEY,
   TUTOR_QUOTA_KEY,
   canShowTutorTurn,
+  grantAdReward,
   loadEntitlement,
   loadTutorQuotaLedger,
   remainingFreeTurns,
@@ -12,13 +14,18 @@ import {
   setPaidUnlock,
   tryConsumeTutorTurn,
   utcDayKey,
-  type TutorEntitlement,
   type TutorQuotaLedger,
 } from './tutorQuota';
 
 describe('DAILY_FREE_TUTOR_TURN_LIMIT', () => {
   it('is locked at 5 (ROADMAP product lock)', () => {
     expect(DAILY_FREE_TUTOR_TURN_LIMIT).toBe(5);
+  });
+});
+
+describe('AD_REWARD_TUTOR_TURNS', () => {
+  it('is locked at 3 (ROADMAP product lock)', () => {
+    expect(AD_REWARD_TUTOR_TURNS).toBe(3);
   });
 });
 
@@ -30,6 +37,7 @@ describe('canShowTutorTurn', () => {
       day,
       count: 4,
       consumedTurnIds: ['a', 'b', 'c', 'd'],
+      bonusTurns: 0,
     };
     expect(canShowTutorTurn(ledger, { plan: 'free' })).toBe(true);
   });
@@ -39,8 +47,19 @@ describe('canShowTutorTurn', () => {
       day,
       count: 5,
       consumedTurnIds: ['1', '2', '3', '4', '5'],
+      bonusTurns: 0,
     };
     expect(canShowTutorTurn(ledger, { plan: 'free' })).toBe(false);
+  });
+
+  it('allows free users when ad bonus raises the effective cap', () => {
+    const ledger: TutorQuotaLedger = {
+      day,
+      count: 5,
+      consumedTurnIds: ['1', '2', '3', '4', '5'],
+      bonusTurns: 3,
+    };
+    expect(canShowTutorTurn(ledger, { plan: 'free' })).toBe(true);
   });
 
   it('never blocks paid users', () => {
@@ -48,6 +67,7 @@ describe('canShowTutorTurn', () => {
       day,
       count: 99,
       consumedTurnIds: [],
+      bonusTurns: 0,
     };
     expect(canShowTutorTurn(ledger, { plan: 'paid' })).toBe(true);
   });
@@ -84,6 +104,7 @@ describe('tryConsumeTutorTurn', () => {
       day: utcDayKey(now),
       count: 5,
       consumedTurnIds: ['1', '2', '3', '4', '5'],
+      bonusTurns: 0,
     });
     const result = tryConsumeTutorTurn('turn-new', now);
     expect(result.allowed).toBe(false);
@@ -98,6 +119,7 @@ describe('tryConsumeTutorTurn', () => {
       day: utcDayKey(now),
       count: 5,
       consumedTurnIds: ['1', '2', '3', '4', '5'],
+      bonusTurns: 0,
     });
     const result = tryConsumeTutorTurn('turn-paid', now);
     expect(result.allowed).toBe(true);
@@ -110,12 +132,41 @@ describe('tryConsumeTutorTurn', () => {
       day: '2026-10-01',
       count: 5,
       consumedTurnIds: ['old'],
+      bonusTurns: 9,
     });
     const nextDay = new Date('2026-10-02T00:00:00.000Z');
     const result = tryConsumeTutorTurn('turn-fresh', nextDay);
     expect(result.allowed).toBe(true);
     expect(result.ledger.day).toBe('2026-10-02');
     expect(result.ledger.count).toBe(1);
+    expect(result.ledger.bonusTurns).toBe(0);
+  });
+});
+
+describe('grantAdReward', () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  afterEach(() => {
+    localStorage.clear();
+  });
+
+  it('adds three bonus turns so an exhausted free user can continue', () => {
+    const now = new Date('2026-10-02T12:00:00.000Z');
+    saveTutorQuotaLedger({
+      day: utcDayKey(now),
+      count: 5,
+      consumedTurnIds: ['1', '2', '3', '4', '5'],
+      bonusTurns: 0,
+    });
+    expect(tryConsumeTutorTurn('turn-6', now).allowed).toBe(false);
+    const ledger = grantAdReward(now);
+    expect(ledger.bonusTurns).toBe(3);
+    expect(remainingFreeTurns(now)).toBe(3);
+    expect(tryConsumeTutorTurn('turn-6', now).allowed).toBe(true);
+    expect(tryConsumeTutorTurn('turn-7', now).ledger.count).toBe(7);
+    expect(remainingFreeTurns(now)).toBe(1);
   });
 });
 

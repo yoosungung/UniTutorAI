@@ -39,9 +39,10 @@ UniTutor의 프론트엔드 컴포넌트 내부 설계다. 컴포넌트 간 계�
 6. **웹 푸시 및 PWA (`CardFaded`)**
    - `public/sw.js` + `lib/reviewNotify.ts`: 알림 권한 `granted`일 때 `ReviewCard.fadesAt` 도달 카드를 `CardFaded`로 처리하고 서비스 워커 `showNotification`으로 개념 이름 알림(PRODUCT 문구).
    - 하루 상한 **3**(ROADMAP 확정). 레저는 `localStorage` 키 `unitutor:review-notify`(UTC day·count·notifiedCardIds). 서버 Push subscription API 없음(FE local).
-7. **무료 문답 한도 · 유료 스텁 (`TutorTurn`)**
-   - `lib/tutorQuota.ts`: 무료 하루 **5**회(ROADMAP). 레저 `unitutor:tutor-quota`(UTC day·count·consumedTurnIds). 동일 `turn.id`는 당일 재과금 없음.
-   - 유료 entitlement `unitutor:entitlement` (`plan: paid`). 결제 벤더 없음 — `QuotaGate`의 테스트 CTA(`setPaidUnlock`)만. 광고/BYOK는 후속.
+7. **무료 문답 한도 · 광고 보상 · 유료 스텁 (`TutorTurn`)**
+   - `lib/tutorQuota.ts`: 무료 하루 **5**회(ROADMAP). 레저 `unitutor:tutor-quota`(UTC day·count·consumedTurnIds·bonusTurns). 동일 `turn.id`는 당일 재과금 없음.
+   - 광고 스텁 `grantAdReward`: 1회당 **+3** (`AD_REWARD_TUTOR_TURNS`). 광고 SDK/벤더 없음 — 계약·보안 전 `@eric.yoo`. BYOK는 후속.
+   - 유료 entitlement `unitutor:entitlement` (`plan: paid`). 결제 벤더 없음 — `QuotaGate` 테스트 CTA.
 
 ## 3. 내부 디렉터리 구조
 
@@ -70,7 +71,7 @@ frontend/
     │   ├── sessionClose.ts # SessionClosed → ReviewCard + storage append
     │   ├── mathCheck.ts # Math.js 수식 동치 판정 → formulaVerdict
     │   ├── reviewNotify.ts # CardFaded + SW 알림·일 3회 한도
-    │   ├── tutorQuota.ts # 무료 문답 일 5회 + 유료 스텁 entitlement
+    │   ├── tutorQuota.ts # 무료 5/일 + 광고 +3 스텁 + 유료 entitlement
     │   └── storage.ts # localStorage 진도·오답·reviewCards (키 unitutor:learner:{courseId})
     ├── hooks/         # 뷰포트 반응형 훅, SSE 스트리밍 훅 등
     └── types/         # 프론트엔드 전용 내부 타입 정의
@@ -78,7 +79,7 @@ frontend/
         └── events.ts  # CitationSelected / DetourInserted / SessionClosed / CardFaded
 ```
 
-`components/tutor/QuotaGate.tsx`는 한도 초과 시 유료/대안 CTA(테스트 unlock).
+`components/tutor/QuotaGate.tsx`는 한도 초과 시 광고 충전(+3)·유료 unlock CTA(테스트 스텁).
 
 Vite `public/sw.js`는 빌드 시 사이트 루트로 복사된다.
 ## 환경 변수 (Vite / Pages)
