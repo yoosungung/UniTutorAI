@@ -13,6 +13,7 @@ UniTutor의 **배치 가공** 컴포넌트 내부 설계다. 컴포넌트 간 `S
 2. `concepts.json` — 노트/슬라이드 TOC에 맞춘 순서 있는 `ConceptMarker` (concept, startSec, slideLabel?).
 3. `buildSourceSpans` — 마커 구간을 다음 마커(또는 자막 끝)까지 잘라 `SourceSpan` 필드를 채운다.
 4. 산출물 `sourceSpans.json`을 프론트/백엔드가 **그대로 로드**한다. 재인덱싱 없음.
+5. 같은 코스 패키지에 정적 `knowledgeDag.json`(노드=`SourceSpan.id`, 선수 간선)을 둔다. 배치 CLI와 분리된 수동·코스 고정 지식이며, 프론트가 온보딩 경로 축소·`DetourInserted`에 쓴다.
 
 ## 3. 디렉터리
 

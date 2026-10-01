@@ -1,37 +1,175 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { StudyCanvas } from './components/canvas/StudyCanvas';
+import { OnboardingInterview } from './components/onboarding/OnboardingInterview';
+import { PathView } from './components/path/PathView';
 import { TutorPane } from './components/tutor/TutorPane';
 import { TutorTurnView } from './components/tutor/TutorTurnView';
-import { CS50P_LECTURE_0, CS50P_LECTURE_0_SPANS } from './data/cs50pLecture0';
-import { MOCK_TUTOR_TURN_IN_LECTURE } from './data/mockTutorTurn';
+import {
+  CS50P_LECTURE_0,
+  CS50P_LECTURE_0_DAG,
+  CS50P_LECTURE_0_SPANS,
+} from './data/cs50pLecture0';
+import { activePathItem } from './lib/activePathItem';
+import {
+  completeDetour,
+  insertDetour,
+  pickPrerequisiteDetour,
+} from './lib/detour';
+import { buildPathFromOnboarding } from './lib/pathFromOnboarding';
 import { useLayoutMode } from './hooks/useLayoutMode';
 import type { CitationSelected } from './types/events';
+import type { PathItem } from './types/path';
+import type { TutorTurn } from './types/tutorTurn';
+
+function turnForSpan(spanId: string): TutorTurn {
+  const span = CS50P_LECTURE_0_SPANS.find((s) => s.id === spanId);
+  const concept = span?.concept ?? spanId;
+  return {
+    id: `turn-${spanId}`,
+    sourceSpanId: spanId,
+    question: `${concept} 장면에서, 핵심을 한 문장으로 말해 볼까요?`,
+    escalationStep: 1,
+    citations: [spanId],
+    scope: 'in_lecture',
+  };
+}
 
 export default function App() {
   const layout = useLayoutMode();
   const [seekSec, setSeekSec] = useState<number | undefined>(undefined);
+  const [knownSpanIds, setKnownSpanIds] = useState<string[]>([]);
+  const [path, setPath] = useState<PathItem[] | null>(null);
+  const [returnQuestionSpanId, setReturnQuestionSpanId] = useState<
+    string | null
+  >(null);
+
   const layoutLabel =
     layout === 'stacked'
       ? '모바일 세로 모드 (상하 2분할)'
       : '데스크톱 가로 모드 (좌우 2분할)';
 
+  const active = path ? activePathItem(path) : undefined;
+  const focusSpanId = active?.sourceSpanId;
+  const questionSpanId =
+    active?.placement === 'detour'
+      ? active.sourceSpanId
+      : (returnQuestionSpanId ?? focusSpanId);
+
+  const turn = useMemo(
+    () => (questionSpanId ? turnForSpan(questionSpanId) : null),
+    [questionSpanId],
+  );
+
+  function toggleKnown(spanId: string) {
+    setKnownSpanIds((prev) =>
+      prev.includes(spanId)
+        ? prev.filter((id) => id !== spanId)
+        : [...prev, spanId],
+    );
+  }
+
+  function confirmOnboarding() {
+    setPath(
+      buildPathFromOnboarding({
+        dag: CS50P_LECTURE_0_DAG,
+        knownSpanIds,
+      }),
+    );
+    setReturnQuestionSpanId(null);
+  }
+
+  function onStuck() {
+    if (!path || !active || active.placement !== 'current') return;
+    const detourSpanId = pickPrerequisiteDetour(
+      CS50P_LECTURE_0_DAG,
+      active.sourceSpanId,
+    );
+    if (!detourSpanId) return;
+    const { path: next } = insertDetour({
+      path,
+      stuckSpanId: active.sourceSpanId,
+      detourSpanId,
+    });
+    setReturnQuestionSpanId(active.sourceSpanId);
+    setPath(next);
+    const detourSpan = CS50P_LECTURE_0_SPANS.find((s) => s.id === detourSpanId);
+    if (detourSpan) setSeekSec(detourSpan.startSec);
+  }
+
+  function onDetourDone() {
+    if (!path) return;
+    const detour = path.find((p) => p.placement === 'detour');
+    const restored = completeDetour(path);
+    setPath(restored);
+    const backId = detour?.returnToSpanId;
+    setReturnQuestionSpanId(backId ?? null);
+    const back = CS50P_LECTURE_0_SPANS.find((s) => s.id === backId);
+    if (back) setSeekSec(back.startSec);
+  }
+
+  if (!path) {
+    return (
+      <div style={{ width: '100vw', height: '100vh', overflow: 'auto' }}>
+        <OnboardingInterview
+          spans={CS50P_LECTURE_0_SPANS}
+          knownSpanIds={knownSpanIds}
+          onToggleKnown={toggleKnown}
+          onConfirm={confirmOnboarding}
+        />
+      </div>
+    );
+  }
+
   return (
-    <div style={{ width: '100vw', height: '100vh' }}>
-      <StudyCanvas
-        course={CS50P_LECTURE_0}
-        seekSec={seekSec}
-        tutor={
-          <TutorPane layoutLabel={layoutLabel}>
-            <TutorTurnView
-              turn={MOCK_TUTOR_TURN_IN_LECTURE}
-              spans={CS50P_LECTURE_0_SPANS}
-              onCitationSelected={(e: CitationSelected) =>
-                setSeekSec(e.startSec)
-              }
-            />
-          </TutorPane>
-        }
-      />
+    <div
+      style={{
+        width: '100vw',
+        height: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
+      }}
+    >
+      <div
+        style={{
+          maxHeight: '28vh',
+          overflow: 'auto',
+          borderBottom: '1px solid var(--border-subtle, #1E293B)',
+          padding: '0 12px',
+        }}
+      >
+        <PathView path={path} spans={CS50P_LECTURE_0_SPANS} />
+        <div style={{ display: 'flex', gap: 8, paddingBottom: 8 }}>
+          {active?.placement === 'current' && (
+            <button type="button" onClick={onStuck}>
+              막힘 — 우회 삽입
+            </button>
+          )}
+          {active?.placement === 'detour' && (
+            <button type="button" onClick={onDetourDone}>
+              우회 끝 — 원래 질문으로
+            </button>
+          )}
+        </div>
+      </div>
+      <div style={{ flex: 1, minHeight: 0 }}>
+        <StudyCanvas
+          course={CS50P_LECTURE_0}
+          seekSec={seekSec}
+          tutor={
+            <TutorPane layoutLabel={layoutLabel}>
+              {turn && (
+                <TutorTurnView
+                  turn={turn}
+                  spans={CS50P_LECTURE_0_SPANS}
+                  onCitationSelected={(e: CitationSelected) =>
+                    setSeekSec(e.startSec)
+                  }
+                />
+              )}
+            </TutorPane>
+          }
+        />
+      </div>
     </div>
   );
 }
