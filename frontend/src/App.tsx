@@ -40,6 +40,7 @@ import {
   type TutorEntitlement,
 } from './lib/tutorQuota';
 import { useLayoutMode } from './hooks/useLayoutMode';
+import { useTutorTurn } from './hooks/useTutorTurn';
 import type { CitationSelected } from './types/events';
 import type { PathItem } from './types/path';
 import type { ReviewCard } from './types/reviewCard';
@@ -48,6 +49,7 @@ import type { TutorTurn } from './types/tutorTurn';
 /** Demo expected expression for client formulaVerdict (T3-02). */
 const DEMO_EXPECTED_EXPR = '4';
 
+/** DEV-only SSE fallback when Worker/key is unavailable. */
 function turnForSpan(spanId: string): TutorTurn {
   const span = CS50P_LECTURE_0_SPANS.find((s) => s.id === spanId);
   const concept = span?.concept ?? spanId;
@@ -155,11 +157,37 @@ export default function App() {
     active?.placement === 'detour'
       ? active.sourceSpanId
       : (returnQuestionSpanId ?? focusSpanId);
+  const questionConcept = questionSpanId
+    ? CS50P_LECTURE_0_SPANS.find((s) => s.id === questionSpanId)?.concept
+    : undefined;
 
-  const baseTurn = useMemo(
-    () => (questionSpanId ? turnForSpan(questionSpanId) : null),
-    [questionSpanId],
-  );
+  const {
+    turn: streamedTurn,
+    streamingQuestion,
+    error: tutorStreamError,
+    loading: tutorLoading,
+  } = useTutorTurn({
+    courseId: CS50P_LECTURE_0.id,
+    sourceSpanId: questionSpanId,
+    concept: questionConcept,
+    allowLocalFallback: Boolean(import.meta.env.DEV),
+    localFallback: turnForSpan,
+  });
+
+  const baseTurn = useMemo((): TutorTurn | null => {
+    if (streamedTurn) return streamedTurn;
+    if (tutorLoading && streamingQuestion.trim() && questionSpanId) {
+      return {
+        id: `streaming-${questionSpanId}`,
+        sourceSpanId: questionSpanId,
+        question: streamingQuestion,
+        escalationStep: 1,
+        citations: [questionSpanId],
+        scope: 'in_lecture',
+      };
+    }
+    return null;
+  }, [streamedTurn, tutorLoading, streamingQuestion, questionSpanId]);
 
   useEffect(() => {
     setFormulaTurn(null);
@@ -358,8 +386,15 @@ export default function App() {
                     }
                   }}
                 />
-              ) : (
-                turn && (
+              ) : tutorLoading && !turn ? (
+                <p aria-busy="true">튜터 질문을 불러오는 중…</p>
+              ) : turn ? (
+                <>
+                  {tutorStreamError && (
+                    <p role="status" style={{ fontSize: 12, opacity: 0.75 }}>
+                      스트림 안내: {tutorStreamError}
+                    </p>
+                  )}
                   <TutorTurnView
                     turn={turn}
                     spans={CS50P_LECTURE_0_SPANS}
@@ -367,8 +402,10 @@ export default function App() {
                       setSeekSec(e.startSec)
                     }
                   />
-                )
-              )}
+                </>
+              ) : tutorStreamError ? (
+                <p role="alert">튜터를 불러오지 못했습니다: {tutorStreamError}</p>
+              ) : null}
             </TutorPane>
           }
         />

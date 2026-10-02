@@ -10,10 +10,10 @@ UniTutor의 백엔드 컴포넌트 내부 설계다. 컴포넌트 간 계약과 
 
 ## 2. 내부 책임
 
-1. **`TutorTurn` 추론 라우팅 (Model Cascade & Prompt Caching)**
-   - 클라이언트 요청을 받아 시맨틱 캐시(KV/인메모리)를 1차 점검한다.
-   - 캐시 미스 시 강좌 메타데이터와 직전 대화 맥락을 시스템 프롬프트 프리픽스로 고정하여 LLM Provider(Gemini 2.5 Flash-Lite / DeepSeek)에 프롬프트 캐싱 형태로 질의한다.
-   - 응답은 SSE(Server-Sent Events) 형태로 클라이언트에 실시간 스트리밍한다.
+1. **`TutorTurn` 추론 라우팅**
+   - `POST /api/tutor/turn` → SSE(`tutor_turn_delta` · `tutor_turn` · `error`). 계약은 [ARCHITECTURE.md](../ARCHITECTURE.md) §2.6.
+   - MVP: `services/llm.ts`가 Gemini(`GEMINI_API_KEY`)만 호출한다. 키 없으면 503 `llm_unavailable`.
+   - **후순위(미구현):** KV 시맨틱 캐시, 프롬프트 캐싱, DeepSeek cascade — 경로·바인딩만 §3·§4에 남겨 둔다.
 2. **정적 강좌 데이터 서빙**
    - 사전 가공된 강좌 정의, VTT 자막 매핑, 정적 지식 DAG JSON을 Cloudflare R2 또는 Worker Assets를 통해 서빙한다.
 3. **선택적 동기화 API**
