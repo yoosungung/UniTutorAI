@@ -36,5 +36,5 @@
 - ~~첫 과목 확정~~ → CS50P Lecture 0 (`<!-- course:approved -->`).
 - ~~무료 문답의 하루 기본 제공 횟수~~ → **5**/일 (`<!-- free-tutor-turns:5 -->`).
 - ~~광고 1회당 문답 충전 횟수~~ → **3** (`<!-- ad-reward-tutor-turns:3 -->`). 광고 SDK는 FE 스텁(벤더 연동 후속).
-- 사용자 직접 API 키 등록(BYOK) 지원 여부 및 노출 시점.
+- ~~사용자 직접 API 키 등록(BYOK) 지원 여부 및 노출 시점~~ → **지금** 노출 · 브라우저 only + 요청 one-shot (`<!-- byok:approved -->`).
 - ~~다시 보기 알림의 하루 상한~~ → **3**/일 (`<!-- notify-daily-limit:3 -->`).

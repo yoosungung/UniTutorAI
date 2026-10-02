@@ -4,6 +4,7 @@ import { OnboardingInterview } from './components/onboarding/OnboardingInterview
 import { PathView } from './components/path/PathView';
 import { FormulaInput } from './components/math/FormulaInput';
 import { QuotaGate } from './components/tutor/QuotaGate';
+import { ByokPanel } from './components/tutor/ByokPanel';
 import { TutorPane } from './components/tutor/TutorPane';
 import { TutorTurnView } from './components/tutor/TutorTurnView';
 import {
@@ -32,6 +33,7 @@ import {
   saveLearnerState,
   type WrongAnswerRecord,
 } from './lib/storage';
+import { hasByokApiKey } from './lib/byok';
 import {
   grantAdReward,
   loadEntitlement,
@@ -103,6 +105,8 @@ export default function App() {
     loadEntitlement(),
   );
   const [tutorAllowed, setTutorAllowed] = useState(true);
+  const [byokActive, setByokActive] = useState(() => hasByokApiKey());
+  const [byokEpoch, setByokEpoch] = useState(0);
 
   useEffect(() => {
     saveLearnerState({
@@ -172,6 +176,7 @@ export default function App() {
     concept: questionConcept,
     allowLocalFallback: Boolean(import.meta.env.DEV),
     localFallback: turnForSpan,
+    byokEpoch,
   });
 
   const baseTurn = useMemo((): TutorTurn | null => {
@@ -200,9 +205,11 @@ export default function App() {
       setTutorAllowed(true);
       return;
     }
-    const result = tryConsumeTutorTurn(turn.id, new Date(), entitlement);
+    const result = tryConsumeTutorTurn(turn.id, new Date(), entitlement, 5, {
+      byokActive,
+    });
     setTutorAllowed(result.allowed);
-  }, [turn?.id, entitlement.plan]);
+  }, [turn?.id, entitlement.plan, byokActive]);
 
   function toggleKnown(spanId: string) {
     setKnownSpanIds((prev) =>
@@ -338,6 +345,24 @@ export default function App() {
             </button>
           )}
         </div>
+        <ByokPanel
+          onChanged={(active) => {
+            setByokActive(active);
+            setByokEpoch((n) => n + 1);
+            if (active && turn) {
+              setTutorAllowed(true);
+            } else if (turn) {
+              const result = tryConsumeTutorTurn(
+                turn.id,
+                new Date(),
+                entitlement,
+                5,
+                { byokActive: active },
+              );
+              setTutorAllowed(result.allowed);
+            }
+          }}
+        />
         {lastClosedSummary && (
           <p aria-label="세션 종료 요약" style={{ fontSize: 13, opacity: 0.85 }}>
             저장됨: {lastClosedSummary}
@@ -381,6 +406,8 @@ export default function App() {
                         turn.id,
                         new Date(),
                         entitlement,
+                        5,
+                        { byokActive },
                       );
                       setTutorAllowed(result.allowed);
                     }

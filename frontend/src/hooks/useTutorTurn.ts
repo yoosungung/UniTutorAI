@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { loadByokApiKey } from '../lib/byok';
 import { streamTutorTurn } from '../lib/tutorStream';
 import type { TutorTurn } from '../types/tutorTurn';
 
@@ -9,6 +10,8 @@ export type UseTutorTurnInput = {
   /** When true (default in DEV), use local template if SSE fails. */
   allowLocalFallback?: boolean;
   localFallback?: (spanId: string) => TutorTurn;
+  /** Bump to re-fetch when BYOK register/clear changes. */
+  byokEpoch?: number;
 };
 
 export type UseTutorTurnState = {
@@ -20,6 +23,7 @@ export type UseTutorTurnState = {
 
 /**
  * Loads a TutorTurn from Workers SSE when sourceSpanId changes.
+ * Sends browser BYOK key one-shot when present.
  */
 export function useTutorTurn(input: UseTutorTurnInput): UseTutorTurnState {
   const [turn, setTurn] = useState<TutorTurn | null>(null);
@@ -32,6 +36,7 @@ export function useTutorTurn(input: UseTutorTurnInput): UseTutorTurnState {
   const concept = input.concept;
   const allowLocalFallback = input.allowLocalFallback;
   const localFallback = input.localFallback;
+  const byokEpoch = input.byokEpoch ?? 0;
 
   useEffect(() => {
     if (!spanId) {
@@ -68,7 +73,7 @@ export function useTutorTurn(input: UseTutorTurnInput): UseTutorTurnState {
             setError(err);
           },
         },
-        { signal: ac.signal },
+        { signal: ac.signal, byokApiKey: loadByokApiKey() },
       );
 
       if (cancelled) return;
@@ -108,7 +113,7 @@ export function useTutorTurn(input: UseTutorTurnInput): UseTutorTurnState {
       cancelled = true;
       ac.abort();
     };
-  }, [spanId, courseId, concept, allowLocalFallback, localFallback]);
+  }, [spanId, courseId, concept, allowLocalFallback, localFallback, byokEpoch]);
 
   return { turn, streamingQuestion, error, loading };
 }

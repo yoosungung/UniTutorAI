@@ -142,30 +142,38 @@ export function remainingFreeTurns(
   return Math.max(0, effectiveFreeLimit(ledger, base) - ledger.count);
 }
 
+export type TutorQuotaOptions = {
+  /** When true, app inference cost is $0 — do not gate or charge free quota. */
+  byokActive?: boolean;
+};
+
 export function canShowTutorTurn(
   ledger: TutorQuotaLedger,
   entitlement: TutorEntitlement,
   base: number = DAILY_FREE_TUTOR_TURN_LIMIT,
+  options: TutorQuotaOptions = {},
 ): boolean {
+  if (options.byokActive) return true;
   if (entitlement.plan === 'paid') return true;
   return ledger.count < effectiveFreeLimit(ledger, base);
 }
 
 /**
  * Reserve one free TutorTurn for `turnId` (idempotent per UTC day).
- * Paid entitlement always allows and never increments the free ledger.
+ * Paid entitlement and BYOK always allow and never increment the free ledger.
  */
 export function tryConsumeTutorTurn(
   turnId: string,
   now: Date = new Date(),
   entitlement: TutorEntitlement = loadEntitlement(),
   base: number = DAILY_FREE_TUTOR_TURN_LIMIT,
+  options: TutorQuotaOptions = {},
 ): TryConsumeResult {
   const day = utcDayKey(now);
   let ledger = loadTutorQuotaLedger(now);
   if (ledger.day !== day) ledger = emptyLedger(day);
 
-  if (entitlement.plan === 'paid') {
+  if (options.byokActive || entitlement.plan === 'paid') {
     return { allowed: true, ledger, entitlement };
   }
 

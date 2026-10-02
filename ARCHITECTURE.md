@@ -95,6 +95,8 @@
 
 요청 JSON(최소): `courseId`, `sourceSpanId`, 선택 `concept`, `escalationStep`(1\|2\|3), `learnerMessage`.
 
+선택 헤더: `X-UniTutor-Byok-Key` — 학습자 브라우저 BYOK(Gemini) 키 **one-shot**. 서버 DB·KV에 저장하지 않는다. 헤더가 있으면 앱 `GEMINI_API_KEY`보다 우선하며, 응답·SSE `error`에 키 값을 넣지 않는다.
+
 SSE 이벤트 이름:
 
 | `event` | `data` | 의미 |
@@ -103,4 +105,4 @@ SSE 이벤트 이름:
 | `tutor_turn` | `TutorTurn` JSON | 최종 턴. §1/§2.3 계약(`assertValidTutorTurn`) |
 | `error` | `{ "error": string }` | 스트림 중 실패. 비밀·키 값 미포함 |
 
-`GEMINI_API_KEY` 부재 시 SSE를 열지 않고 **503** `{ "error": "llm_unavailable" }`(키 미노출). MVP Provider는 Gemini만; 프롬프트 캐싱·DeepSeek cascade는 후속.
+앱 `GEMINI_API_KEY`와 BYOK 헤더가 **둘 다** 없으면 SSE를 열지 않고 **503** `{ "error": "llm_unavailable" }`(키 미노출). MVP Provider는 Gemini만; 프롬프트 캐싱·DeepSeek cascade는 후속.

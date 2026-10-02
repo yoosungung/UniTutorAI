@@ -71,6 +71,18 @@ describe('canShowTutorTurn', () => {
     };
     expect(canShowTutorTurn(ledger, { plan: 'paid' })).toBe(true);
   });
+
+  it('never blocks when BYOK is active (app inference cost $0)', () => {
+    const ledger: TutorQuotaLedger = {
+      day,
+      count: 99,
+      consumedTurnIds: [],
+      bonusTurns: 0,
+    };
+    expect(canShowTutorTurn(ledger, { plan: 'free' }, 5, { byokActive: true })).toBe(
+      true,
+    );
+  });
 });
 
 describe('tryConsumeTutorTurn', () => {
@@ -125,6 +137,22 @@ describe('tryConsumeTutorTurn', () => {
     expect(result.allowed).toBe(true);
     expect(result.ledger.count).toBe(5);
     expect(result.ledger.consumedTurnIds).not.toContain('turn-paid');
+  });
+
+  it('allows without counting when BYOK is active', () => {
+    const now = new Date('2026-10-02T12:00:00.000Z');
+    saveTutorQuotaLedger({
+      day: utcDayKey(now),
+      count: 5,
+      consumedTurnIds: ['1', '2', '3', '4', '5'],
+      bonusTurns: 0,
+    });
+    const result = tryConsumeTutorTurn('turn-byok', now, loadEntitlement(), 5, {
+      byokActive: true,
+    });
+    expect(result.allowed).toBe(true);
+    expect(result.ledger.count).toBe(5);
+    expect(result.ledger.consumedTurnIds).not.toContain('turn-byok');
   });
 
   it('resets daily count when the UTC day rolls', () => {
