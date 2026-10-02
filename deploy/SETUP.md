@@ -101,6 +101,7 @@ Attach만으로는 공개 DNS가 안 생길 수 있음 — 명시적 zone CNAME�
 3. DNS → CNAME `unitutor` → `unitutor.pages.dev` (proxied)가 없으면 추가
 
 API 403·zone mismatch면 토큰 권한(Pages Edit + Zone DNS Edit) 또는 대시보드를 사람이 맞춘다.
+DNS list **403**이면 CI는 zone CNAME ensure를 **soft-skip**하고 Smoke로 진행한다(Dashboard가 이미 CNAME을 갖고 있는 경우). 토큰에 Zone DNS Read/Edit를 주면 ensure가 다시 API로 생성·검증한다.
 ## CI
 
 [`.github/workflows/ci.yml`](../.github/workflows/ci.yml): backend test + `deploy:dry-run`, frontend test + build(+ pages dry-run).

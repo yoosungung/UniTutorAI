@@ -49,11 +49,21 @@ def dns_write_ok(http_code: int, body: str) -> bool:
     return bool(re.search(r"already|exist|duplicate", body or "", re.I))
 
 
+def dns_list_ok(http_code: int) -> bool:
+    return http_code == 200
+
+
+def dns_list_soft_skip(http_code: int) -> bool:
+    """403 = token lacks Zone DNS Read; Dashboard owns CNAME — skip ensure, continue smoke."""
+    return http_code == 403
+
+
 def main(argv: list[str]) -> int:
     if len(argv) < 2:
         print(
             "usage: pages_domain_dns.py status <domain> | zone-tag <domain> | "
-            "zone-id | has-record <host> | dns-ok <code>",
+            "zone-id | has-record <host> | dns-ok <code> | "
+            "dns-list-ok <code> | dns-list-soft-skip <code>",
             file=sys.stderr,
         )
         return 2
@@ -84,6 +94,10 @@ def main(argv: list[str]) -> int:
     if cmd == "dns-ok":
         code = int(argv[2])
         return 0 if dns_write_ok(code, sys.stdin.read()) else 1
+    if cmd == "dns-list-ok":
+        return 0 if dns_list_ok(int(argv[2])) else 1
+    if cmd == "dns-list-soft-skip":
+        return 0 if dns_list_soft_skip(int(argv[2])) else 1
     print(f"unknown command: {cmd}", file=sys.stderr)
     return 2
 

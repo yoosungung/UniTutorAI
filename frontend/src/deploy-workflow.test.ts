@@ -26,4 +26,9 @@ describe("deploy.yml Pages bootstrap", () => {
     expect(deployYml).not.toMatch(/DOMAIN=tutor\.askwho\.net/);
     expect(deployYml).not.toMatch(/https:\/\/tutor\.askwho\.net\//);
   });
+
+  it("soft-skips zone DNS ensure when list returns 403 (Dashboard path)", () => {
+    expect(deployYml).toMatch(/dns-list-soft-skip/);
+    expect(deployYml).toMatch(/Skipping DNS ensure/);
+  });
 });
