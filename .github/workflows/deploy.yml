@@ -68,7 +68,7 @@ jobs:
           VITE_API_BASE_URL: https://api.tutor.askwho.net
         run: npm run deploy:pages
 
-      # wrangler has no pages domain CLI; API attach (same-account zone creates DNS/TLS).
+      # wrangler has no pages domain CLI; API attach + explicit zone CNAME (attach alone ≠ public DNS).
       # List match must be JSON-aware (pretty "name": "x" breaks grep -F '"name":"x"').
       # POST 400 already-exists is success when Dashboard/prior run attached first.
       - name: Ensure Pages custom domain
@@ -81,6 +81,8 @@ jobs:
           TOKEN="${CLOUDFLARE_API_TOKEN}"
           PROJECT=unitutor
           DOMAIN=tutor.askwho.net
+          ZONE_NAME=askwho.net
+          PAGES_DEV=unitutor.pages.dev
           BASE="https://api.cloudflare.com/client/v4/accounts/${ACCOUNT_ID}/pages/projects/${PROJECT}/domains"
           list_json=$(curl -fsS -H "Authorization: Bearer ${TOKEN}" "${BASE}")
           if printf '%s' "${list_json}" | python3 deploy/pages_domain_attached.py check "${DOMAIN}"; then
@@ -98,6 +100,48 @@ jobs:
               echo "Pages domain ${DOMAIN} attach ok (or already present)"
             else
               echo "Domain attach failed HTTP ${code}" >&2
+              exit 1
+            fi
+            list_json=$(curl -fsS -H "Authorization: Bearer ${TOKEN}" "${BASE}")
+          fi
+          status=$(printf '%s' "${list_json}" | python3 deploy/pages_domain_dns.py status "${DOMAIN}" || true)
+          echo "Pages domain ${DOMAIN} status=${status:-unknown}"
+          zones_code=$(curl -sS -o /tmp/cf-zones.json -w "%{http_code}" \
+            -H "Authorization: Bearer ${TOKEN}" \
+            "https://api.cloudflare.com/client/v4/zones?name=${ZONE_NAME}")
+          if [ "${zones_code}" != "200" ]; then
+            echo "Zone lookup HTTP ${zones_code}: $(cat /tmp/cf-zones.json)" >&2
+            echo "Token needs Zone Read (askwho.net) or use Dashboard Custom domains + DNS." >&2
+            exit 1
+          fi
+          zone_id=$(python3 deploy/pages_domain_dns.py zone-id < /tmp/cf-zones.json) || {
+            echo "Zone ${ZONE_NAME} not found in this account — Dashboard DNS required." >&2
+            exit 1
+          }
+          echo "Zone ${ZONE_NAME} id=${zone_id}"
+          dns_code=$(curl -sS -o /tmp/cf-dns-list.json -w "%{http_code}" \
+            -H "Authorization: Bearer ${TOKEN}" \
+            "https://api.cloudflare.com/client/v4/zones/${zone_id}/dns_records?name=${DOMAIN}")
+          if [ "${dns_code}" != "200" ]; then
+            echo "DNS list HTTP ${dns_code}: $(cat /tmp/cf-dns-list.json)" >&2
+            echo "Token needs Zone DNS Read/Edit or use Dashboard." >&2
+            exit 1
+          fi
+          if python3 deploy/pages_domain_dns.py has-record "${DOMAIN}" < /tmp/cf-dns-list.json; then
+            echo "DNS record for ${DOMAIN} already present"
+          else
+            echo "Creating proxied CNAME ${DOMAIN} → ${PAGES_DEV}"
+            create_code=$(curl -sS -o /tmp/cf-dns-create.json -w "%{http_code}" -X POST \
+              -H "Authorization: Bearer ${TOKEN}" \
+              -H "Content-Type: application/json" \
+              "https://api.cloudflare.com/client/v4/zones/${zone_id}/dns_records" \
+              -d "{\"type\":\"CNAME\",\"name\":\"${DOMAIN}\",\"content\":\"${PAGES_DEV}\",\"ttl\":1,\"proxied\":true}")
+            create_body=$(cat /tmp/cf-dns-create.json || true)
+            echo "DNS create HTTP ${create_code}: ${create_body}"
+            if printf '%s' "${create_body}" | python3 deploy/pages_domain_dns.py dns-ok "${create_code}"; then
+              echo "DNS CNAME for ${DOMAIN} ok"
+            else
+              echo "DNS create failed — grant Zone DNS Edit or add CNAME in Dashboard." >&2
               exit 1
             fi
           fi
