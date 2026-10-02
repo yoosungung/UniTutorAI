@@ -8,7 +8,7 @@
     "build": "tsc && vite build",
     "preview": "vite preview",
     "test": "vitest run",
-    "deploy:pages": "npm run build && wrangler pages deploy dist --project-name=unitutor --config ./wrangler.jsonc",
+    "deploy:pages": "npm run build && wrangler pages deploy dist --project-name=unitutor",
     "deploy:pages:dry-run": "npm run build"
   },
   "dependencies": {
