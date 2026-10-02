@@ -23,7 +23,7 @@ UniTutor의 프론트엔드 컴포넌트 내부 설계다. 컴포넌트 간 계�
 3. **TutorTurn UI (1질문 + 인용)**
    - `TutorTurnView`: `question` 하나 + `citations` 버튼. 정답/풀이 필드 없음.
    - `scope=out_of_scope`이면 citations 숨김·범위 밖 안내만.
-   - mock 턴(`data/mockTutorTurn.ts`)으로 백엔드 없이 캔버스 검증.
+   - 런타임은 `lib/tutorStream.ts`가 `POST /api/tutor/turn` SSE를 소비한다. `data/mockTutorTurn.ts`는 단위 테스트 픽스처만.
 3b. **지식 DAG · 경로 · detour (2단계)**
    - 정적 DAG JSON은 `content/fixtures/`(SourceSpan 옆). 런타임은 `lib/pathFromOnboarding`·`lib/detour`.
    - 온보딩 후 `PathView`에 `planned`/`skipped`/`current`/`detour` 표시.
@@ -34,7 +34,8 @@ UniTutor의 프론트엔드 컴포넌트 내부 설계다. 컴포넌트 간 계�
    - **기억 스케줄러 (`ts-fsrs`)**: FSRS 머신러닝 스케줄러를 브라우저 로컬에서 계산하여 `ReviewCard` 생성 및 망각 곡선 추적. `lib/fsrs.ts`가 `SessionClosed` → `ReviewCard`(`fadesAt`=`card.due`)를 만든다. 기본 파라미터는 `enable_fuzz=false`(로컬 상수).
    - **로컬 우선 영속화**: `lib/storage.ts`가 `localStorage` 키 `unitutor:learner:{CourseRef.id}`에 진도(`PathItem[]`·`current`/`detour`)·오답(`wrongAnswers`)·`reviewCards`를 저장·복원한다. quota/private 모드 실패 시 no-op(graceful degrade). `lib/sessionClose.ts`가 세션 종료 시 카드 1장을 append. IndexedDB는 후속.
 5. **튜터 상호작용 및 스트리밍 처리**
-   - 백엔드 Workers의 SSE 스트림을 수신하여 실시간 튜터 말풍선 렌더링.
+   - `hooks/useTutorTurn.ts` + `lib/tutorStream.ts`: Workers SSE(`tutor_turn_delta`/`tutor_turn`)를 수신해 `TutorTurnView`에 반영.
+   - 네트워크·503 실패 시 짧은 오류 문구; 로컬 템플릿 폴백은 개발용만(`import.meta.env.DEV`).
    - 3단계 에스컬레이션(힌트 반복 시 직전 단서 설명 요구)의 1차 감지 및 템플릿 처리.
 6. **웹 푸시 및 PWA (`CardFaded`)**
    - `public/sw.js` + `lib/reviewNotify.ts`: 알림 권한 `granted`일 때 `ReviewCard.fadesAt` 도달 카드를 `CardFaded`로 처리하고 서비스 워커 `showNotification`으로 개념 이름 알림(PRODUCT 문구).
@@ -72,8 +73,9 @@ frontend/
     │   ├── mathCheck.ts # Math.js 수식 동치 판정 → formulaVerdict
     │   ├── reviewNotify.ts # CardFaded + SW 알림·일 3회 한도
     │   ├── tutorQuota.ts # 무료 5/일 + 광고 +3 스텁 + 유료 entitlement
+    │   ├── tutorStream.ts # POST /api/tutor/turn SSE 파서
     │   └── storage.ts # localStorage 진도·오답·reviewCards (키 unitutor:learner:{courseId})
-    ├── hooks/         # 뷰포트 반응형 훅, SSE 스트리밍 훅 등
+    ├── hooks/         # useLayoutMode, useTutorTurn(SSE) 등
     └── types/         # 프론트엔드 전용 내부 타입 정의
         ├── reviewCard.ts # ReviewCard (ARCHITECTURE §2.4)
         └── events.ts  # CitationSelected / DetourInserted / SessionClosed / CardFaded

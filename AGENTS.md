@@ -37,6 +37,6 @@ This file provides guidance to AI coding assistants (Claude Code, Codex, Gemini,
 - 한국어/영어 혼용을 허용한다. 한 문서 내 일관성만 지킨다(현재 AGENTS/PRODUCT/ARCHITECTURE/ROADMAP/DESIGN은 한국어 본문 + 영어 식별자).
  
 ## 3. Status
- 
-backend · frontend 스켈레톤, 적응형 2분할 캔버스(YouTube iframe), CS50P L0 정적 `SourceSpan`·`knowledgeDag` 픽스처, 온보딩 경로 축소(`planned`/`skipped`/`current`)·`DetourInserted`, mock `TutorTurn` + `CitationSelected`→`startSec` seek, local-first 진도·오답, 로컬 FSRS `SessionClosed`→`ReviewCard`, 클라이언트 Math.js `formulaVerdict`, Web Push/SW `CardFaded` 알림(일 3회), 무료 문답 일 5회·광고 보상(+3 스텁)·유료 스텁 CTA가 있다. 다음: BYOK·추론 라우팅.
+
+backend · frontend 스켈레톤, 적응형 2분할 캔버스(YouTube iframe), CS50P L0 정적 `SourceSpan`·`knowledgeDag` 픽스처, 온보딩 경로 축소(`planned`/`skipped`/`current`)·`DetourInserted`, Workers `POST /api/tutor/turn` SSE(`TutorTurn`) + Gemini 라우팅, `CitationSelected`→`startSec` seek, local-first 진도·오답, 로컬 FSRS `SessionClosed`→`ReviewCard`, 클라이언트 Math.js `formulaVerdict`, Web Push/SW `CardFaded` 알림(일 3회), 무료 문답 일 5회·광고 보상(+3 스텁)·유료 스텁 CTA가 있다. 다음: BYOK(승인 시).
 

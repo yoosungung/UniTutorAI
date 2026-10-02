@@ -1,5 +1,5 @@
 /**
- * Mock TutorTurn for stage-1 UI (no LLM yet).
+ * TutorTurn fixtures for unit tests (SSE is runtime source).
  * Uses CS50P Lecture 0 SourceSpan fixtures.
  */
 import type { TutorTurn } from '../types/tutorTurn';

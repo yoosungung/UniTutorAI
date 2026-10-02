@@ -86,3 +86,21 @@
 | `DetourInserted` | 질문이 막힘 | 경로에 `placement=detour`인 장면이 끼워지고 `returnToSpanId`가 채워짐 |
 | `SessionClosed` | 짧은 확인과 피드백이 끝남 | `ReviewCard` 한 장 생성 |
 | `CardFaded` | `fadesAt`에 도달 | 홈의 다시 볼 카드와 알림 후보가 됨 |
+
+### 2.6 Tutor 추론 HTTP
+
+| 메서드 | 경로 | 결과 |
+|--------|------|------|
+| `POST` | `/api/tutor/turn` | `Content-Type: text/event-stream` SSE |
+
+요청 JSON(최소): `courseId`, `sourceSpanId`, 선택 `concept`, `escalationStep`(1\|2\|3), `learnerMessage`.
+
+SSE 이벤트 이름:
+
+| `event` | `data` | 의미 |
+|---------|--------|------|
+| `tutor_turn_delta` | `{ "text": string }` | 유도 질문 조각(누적 가능) |
+| `tutor_turn` | `TutorTurn` JSON | 최종 턴. §1/§2.3 계약(`assertValidTutorTurn`) |
+| `error` | `{ "error": string }` | 스트림 중 실패. 비밀·키 값 미포함 |
+
+`GEMINI_API_KEY` 부재 시 SSE를 열지 않고 **503** `{ "error": "llm_unavailable" }`(키 미노출). MVP Provider는 Gemini만; 프롬프트 캐싱·DeepSeek cascade는 후속.
