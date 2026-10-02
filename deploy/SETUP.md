@@ -38,7 +38,7 @@ cd backend && npm install && npm test && npm run deploy:dry-run
 cd frontend && npm install && npm test && npm run deploy:pages:dry-run
 ```
 
-`deploy` / `deploy:dry-run` / Pages 스크립트는 `./wrangler.jsonc`를 명시한다(상위 monorepo `.wrangler/deploy` redirect 회피). Workers `deploy:dry-run`은 업로드 없이 번들 검증. Pages는 wrangler v3에 `--dry-run`이 없어 `deploy:pages:dry-run` = `npm run build`.
+Workers `deploy` / `deploy:dry-run`은 `--config ./wrangler.jsonc`로 상위 monorepo `.wrangler` redirect를 피한다. Pages는 wrangler가 `--config` 커스텀 경로를 거부하므로 cwd의 `wrangler.jsonc` 자동 탐색만 쓴다(`deploy:pages`). Pages `deploy:pages:dry-run` = `npm run build`(v3에 pages `--dry-run` 없음).
 
 ## Deploy sequence (원격)
 
