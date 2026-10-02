@@ -68,10 +68,36 @@ jobs:
           VITE_API_BASE_URL: https://api.tutor.askwho.net
         run: npm run deploy:pages
 
+      # wrangler has no pages domain CLI; API attach (same-account zone creates DNS/TLS).
+      - name: Ensure Pages custom domain
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          ACCOUNT_ID="${CLOUDFLARE_ACCOUNT_ID}"
+          TOKEN="${CLOUDFLARE_API_TOKEN}"
+          PROJECT=unitutor
+          DOMAIN=tutor.askwho.net
+          BASE="https://api.cloudflare.com/client/v4/accounts/${ACCOUNT_ID}/pages/projects/${PROJECT}/domains"
+          list_json=$(curl -fsS -H "Authorization: Bearer ${TOKEN}" "${BASE}")
+          if echo "${list_json}" | grep -Fq "\"name\":\"${DOMAIN}\""; then
+            echo "Pages domain ${DOMAIN} already attached"
+          else
+            echo "Attaching Pages domain ${DOMAIN}"
+            curl -fsS -X POST \
+              -H "Authorization: Bearer ${TOKEN}" \
+              -H "Content-Type: application/json" \
+              "${BASE}" \
+              -d "{\"name\":\"${DOMAIN}\"}"
+            echo
+          fi
+
       - name: Smoke
         run: |
           set -euo pipefail
           curl -fsS --retry 8 --retry-all-errors --retry-delay 3 \
             https://api.tutor.askwho.net/health
-          curl -fsS --retry 8 --retry-all-errors --retry-delay 3 \
+          # Custom domain may need a short DNS/TLS settle after first attach.
+          curl -fsS --retry 12 --retry-all-errors --retry-delay 5 \
             -o /dev/null https://tutor.askwho.net/

@@ -88,10 +88,14 @@ Pages 빌드 env에 `VITE_API_BASE_URL=https://api.tutor.askwho.net`을 넣는�
 
 ### B. Pages — `tutor.askwho.net`
 
+wrangler에는 Pages custom domain CLI가 없다. CI `deploy.yml`의 **Ensure Pages custom domain**이 Cloudflare API로 `tutor.askwho.net`을 `unitutor`에 attach한다(이미 있으면 skip). 존이 같은 계정이면 DNS/TLS가 따라온다.
+
+대시보드 대안:
 1. [Workers & Pages](https://dash.cloudflare.com/?to=/:account/workers-and-pages) → Pages `unitutor`
 2. **Custom domains** → Set up a custom domain → `tutor.askwho.net`
 3. 존이 Cloudflare면 DNS/TLS가 자동 생성될 때까지 대기
 
+API 403·zone mismatch면 토큰 권한(Pages Edit + Zone DNS) 또는 대시보드를 사람이 맞춘다.
 ## CI
 
 [`.github/workflows/ci.yml`](../.github/workflows/ci.yml): backend test + `deploy:dry-run`, frontend test + build(+ pages dry-run).
@@ -102,7 +106,7 @@ Pages 빌드 env에 `VITE_API_BASE_URL=https://api.tutor.askwho.net`을 넣는�
 
 - `on:` `push` `main` + `workflow_dispatch`
 - Secrets: `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID` (repo Actions secrets)
-- 순서: Worker `npm run deploy` → Ensure Pages project (`unitutor`) → Pages `deploy:pages` (`VITE_API_BASE_URL=https://api.tutor.askwho.net`)
+- 순서: Worker `npm run deploy` → Ensure Pages project (`unitutor`) → Pages `deploy:pages` → Ensure Pages custom domain (`tutor.askwho.net`) → Smoke
 - D1 `migrations apply`: **N/A** (바인딩 없음; 생기면 apply → deploy로 확장)
 - Smoke: `https://api.tutor.askwho.net/health` + `https://tutor.askwho.net/`
 
