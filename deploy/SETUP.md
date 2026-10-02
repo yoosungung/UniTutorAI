@@ -88,7 +88,7 @@ Pages 빌드 env에 `VITE_API_BASE_URL=https://api.tutor.askwho.net`을 넣는�
 
 ### B. Pages — `tutor.askwho.net`
 
-wrangler에는 Pages custom domain CLI가 없다. CI `deploy.yml`의 **Ensure Pages custom domain**이 Cloudflare API로 `tutor.askwho.net`을 `unitutor`에 attach한다(이미 있으면 skip). 존이 같은 계정이면 DNS/TLS가 따라온다.
+wrangler에는 Pages custom domain CLI가 없다. CI `deploy.yml`의 **Ensure Pages custom domain**이 Cloudflare API로 `tutor.askwho.net`을 `unitutor`에 attach한다. 목록 판별은 `deploy/pages_domain_attached.py`(JSON `name` 공백 허용). 이미 Dashboard/선행 실행으로 attach된 뒤 POST가 400 already-exists면 성공으로 본다. 존이 같은 계정이면 DNS/TLS가 따라온다.
 
 대시보드 대안:
 1. [Workers & Pages](https://dash.cloudflare.com/?to=/:account/workers-and-pages) → Pages `unitutor`
