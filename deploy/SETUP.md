@@ -1,7 +1,7 @@
 # Cloudflare deploy (UniTutor)
 
 프로덕션 호스트:
-- **Pages (SPA):** `https://tutor.askwho.net`
+- **Pages (SPA):** `https://unitutor.askwho.net`
 - **Worker (API):** `https://api.tutor.askwho.net`
 
 Workers(`backend/`) + Pages(`frontend/dist/`). D1/R2/KV는 아직 제품 경로에 묶지 않는다 — 바인딩을 추가할 때 이 문서를 함께 갱신한다.
@@ -15,7 +15,7 @@ Wiki: apply → deploy 순서 — `Cloudflare-D1-Migrations-Before-Worker-Deploy
 - `npx wrangler login` (로컬) 또는 GitHub Actions secrets (아래)
 - Pages 프로젝트 이름(기본): `unitutor` (없으면 CI가 `wrangler pages project create unitutor --production-branch=main`로 생성; 대시보드 수동 생성도 가능)
 - Worker 이름: `unitutor-backend` (`backend/wrangler.jsonc` `name`)
-- `tutor.askwho.net` / `api.tutor.askwho.net`에 **기존 CNAME/A/AAAA가 있으면 제거** (Custom Domain이 DNS·인증서를 직접 만듦). MX/TXT는 유지.
+- `unitutor.askwho.net` / `api.tutor.askwho.net`에 **기존 CNAME/A/AAAA가 있으면 제거** (Custom Domain이 DNS·인증서를 직접 만듦). MX/TXT는 유지.
 
 ## Secrets / tokens (원격 배포 전)
 
@@ -86,13 +86,13 @@ Pages 빌드 env에 `VITE_API_BASE_URL=https://api.tutor.askwho.net`을 넣는�
 
 에러 `Hostname already has externally managed DNS records` → DNS에서 해당 호스트 CNAME/A/AAAA만 삭제 후 재시도.
 
-### B. Pages — `tutor.askwho.net`
+### B. Pages — `unitutor.askwho.net`
 
-wrangler에는 Pages custom domain CLI가 없다. CI `deploy.yml`의 **Ensure Pages custom domain**이 Cloudflare API로 `tutor.askwho.net`을 `unitutor`에 attach한다. 목록 판별은 `deploy/pages_domain_attached.py`(JSON `name` 공백 허용). 이미 Dashboard/선행 실행으로 attach된 뒤 POST가 400 already-exists면 성공으로 본다. 존이 같은 계정이면 DNS/TLS가 따라온다.
+wrangler에는 Pages custom domain CLI가 없다. CI `deploy.yml`의 **Ensure Pages custom domain**이 Cloudflare API로 `unitutor.askwho.net`을 `unitutor`에 attach한다. 목록 판별은 `deploy/pages_domain_attached.py`(JSON `name` 공백 허용). 이미 Dashboard/선행 실행으로 attach된 뒤 POST가 400 already-exists면 성공으로 본다. 존이 같은 계정이면 DNS/TLS가 따라온다.
 
 대시보드 대안:
 1. [Workers & Pages](https://dash.cloudflare.com/?to=/:account/workers-and-pages) → Pages `unitutor`
-2. **Custom domains** → Set up a custom domain → `tutor.askwho.net`
+2. **Custom domains** → Set up a custom domain → `unitutor.askwho.net`
 3. 존이 Cloudflare면 DNS/TLS가 자동 생성될 때까지 대기
 
 API 403·zone mismatch면 토큰 권한(Pages Edit + Zone DNS) 또는 대시보드를 사람이 맞춘다.
@@ -106,9 +106,9 @@ API 403·zone mismatch면 토큰 권한(Pages Edit + Zone DNS) 또는 대시보�
 
 - `on:` `push` `main` + `workflow_dispatch`
 - Secrets: `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID` (repo Actions secrets)
-- 순서: Worker `npm run deploy` → Ensure Pages project (`unitutor`) → Pages `deploy:pages` → Ensure Pages custom domain (`tutor.askwho.net`) → Smoke
+- 순서: Worker `npm run deploy` → Ensure Pages project (`unitutor`) → Pages `deploy:pages` → Ensure Pages custom domain (`unitutor.askwho.net`) → Smoke
 - D1 `migrations apply`: **N/A** (바인딩 없음; 생기면 apply → deploy로 확장)
-- Smoke: `https://api.tutor.askwho.net/health` + `https://tutor.askwho.net/`
+- Smoke: `https://api.tutor.askwho.net/health` + `https://unitutor.askwho.net/`
 
 ```bash
 # 수동 재배포
@@ -121,5 +121,5 @@ gh workflow run deploy.yml --repo yoosungung/UniTutorAI
 
 ```bash
 curl -sS https://api.tutor.askwho.net/health
-# 브라우저: https://tutor.askwho.net 캔버스 로드 · Network에서 API base = api.tutor.askwho.net 확인
+# 브라우저: https://unitutor.askwho.net 캔버스 로드 · Network에서 API base = api.tutor.askwho.net 확인
 ```

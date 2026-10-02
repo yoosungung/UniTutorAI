@@ -19,4 +19,11 @@ describe("deploy.yml Pages bootstrap", () => {
     expect(createAt).toBeGreaterThan(-1);
     expect(deployAt).toBeGreaterThan(createAt);
   });
+
+  it("attaches and smokes Pages custom domain unitutor.askwho.net", () => {
+    expect(deployYml).toMatch(/DOMAIN=unitutor\.askwho\.net/);
+    expect(deployYml).toMatch(/https:\/\/unitutor\.askwho\.net\//);
+    expect(deployYml).not.toMatch(/DOMAIN=tutor\.askwho\.net/);
+    expect(deployYml).not.toMatch(/https:\/\/tutor\.askwho\.net\//);
+  });
 });
