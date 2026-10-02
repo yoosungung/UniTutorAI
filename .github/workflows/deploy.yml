@@ -69,6 +69,8 @@ jobs:
         run: npm run deploy:pages
 
       # wrangler has no pages domain CLI; API attach (same-account zone creates DNS/TLS).
+      # List match must be JSON-aware (pretty "name": "x" breaks grep -F '"name":"x"').
+      # POST 400 already-exists is success when Dashboard/prior run attached first.
       - name: Ensure Pages custom domain
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -81,16 +83,23 @@ jobs:
           DOMAIN=tutor.askwho.net
           BASE="https://api.cloudflare.com/client/v4/accounts/${ACCOUNT_ID}/pages/projects/${PROJECT}/domains"
           list_json=$(curl -fsS -H "Authorization: Bearer ${TOKEN}" "${BASE}")
-          if echo "${list_json}" | grep -Fq "\"name\":\"${DOMAIN}\""; then
+          if printf '%s' "${list_json}" | python3 deploy/pages_domain_attached.py check "${DOMAIN}"; then
             echo "Pages domain ${DOMAIN} already attached"
           else
             echo "Attaching Pages domain ${DOMAIN}"
-            curl -fsS -X POST \
+            code=$(curl -sS -o /tmp/cf-domain-attach.json -w "%{http_code}" -X POST \
               -H "Authorization: Bearer ${TOKEN}" \
               -H "Content-Type: application/json" \
               "${BASE}" \
-              -d "{\"name\":\"${DOMAIN}\"}"
-            echo
+              -d "{\"name\":\"${DOMAIN}\"}")
+            body=$(cat /tmp/cf-domain-attach.json || true)
+            echo "attach HTTP ${code}: ${body}"
+            if printf '%s' "${body}" | python3 deploy/pages_domain_attached.py attach-ok "${code}"; then
+              echo "Pages domain ${DOMAIN} attach ok (or already present)"
+            else
+              echo "Domain attach failed HTTP ${code}" >&2
+              exit 1
+            fi
           fi
 
       - name: Smoke
