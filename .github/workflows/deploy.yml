@@ -46,6 +46,20 @@ jobs:
         working-directory: frontend
         run: npm ci
 
+      # pages deploy does not create projects in non-interactive CI (8000007).
+      - name: Ensure Pages project
+        working-directory: frontend
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          if npx wrangler pages project list | grep -qE '(^|[[:space:]])unitutor([[:space:]]|$)'; then
+            echo "Pages project unitutor already exists"
+          else
+            npx wrangler pages project create unitutor --production-branch=main
+          fi
+
       - name: Deploy Pages
         working-directory: frontend
         env:

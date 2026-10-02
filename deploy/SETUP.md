@@ -13,7 +13,7 @@ Wiki: apply → deploy 순서 — `Cloudflare-D1-Migrations-Before-Worker-Deploy
 
 - Cloudflare account (권장: **`askwho.net` 존이 같은 계정에 Active**)
 - `npx wrangler login` (로컬) 또는 GitHub Actions secrets (아래)
-- Pages 프로젝트 이름(기본): `unitutor`
+- Pages 프로젝트 이름(기본): `unitutor` (없으면 CI가 `wrangler pages project create unitutor --production-branch=main`로 생성; 대시보드 수동 생성도 가능)
 - Worker 이름: `unitutor-backend` (`backend/wrangler.jsonc` `name`)
 - `tutor.askwho.net` / `api.tutor.askwho.net`에 **기존 CNAME/A/AAAA가 있으면 제거** (Custom Domain이 DNS·인증서를 직접 만듦). MX/TXT는 유지.
 
@@ -102,7 +102,7 @@ Pages 빌드 env에 `VITE_API_BASE_URL=https://api.tutor.askwho.net`을 넣는�
 
 - `on:` `push` `main` + `workflow_dispatch`
 - Secrets: `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID` (repo Actions secrets)
-- 순서: Worker `npm run deploy` → Pages `deploy:pages` (`VITE_API_BASE_URL=https://api.tutor.askwho.net`)
+- 순서: Worker `npm run deploy` → Ensure Pages project (`unitutor`) → Pages `deploy:pages` (`VITE_API_BASE_URL=https://api.tutor.askwho.net`)
 - D1 `migrations apply`: **N/A** (바인딩 없음; 생기면 apply → deploy로 확장)
 - Smoke: `https://api.tutor.askwho.net/health` + `https://tutor.askwho.net/`
 
