@@ -4,6 +4,8 @@ from __future__ import annotations
 import unittest
 
 from pages_domain_dns import (
+    dns_list_ok,
+    dns_list_soft_skip,
     dns_write_ok,
     domain_status,
     has_dns_record,
@@ -68,6 +70,21 @@ class DnsWriteOkTests(unittest.TestCase):
 
     def test_forbidden(self) -> None:
         self.assertFalse(dns_write_ok(403, '{"errors":[{"message":"Authentication error"}]}'))
+
+
+class DnsListGateTests(unittest.TestCase):
+    """Token without Zone DNS Read gets 403 — Dashboard owns CNAME; Ensure must soft-skip."""
+
+    def test_list_ok(self) -> None:
+        self.assertTrue(dns_list_ok(200))
+        self.assertFalse(dns_list_ok(403))
+        self.assertFalse(dns_list_ok(500))
+
+    def test_soft_skip_only_forbidden(self) -> None:
+        self.assertTrue(dns_list_soft_skip(403))
+        self.assertFalse(dns_list_soft_skip(200))
+        self.assertFalse(dns_list_soft_skip(401))
+        self.assertFalse(dns_list_soft_skip(500))
 
 
 if __name__ == "__main__":

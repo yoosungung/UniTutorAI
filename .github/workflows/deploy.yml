@@ -122,28 +122,32 @@ jobs:
           dns_code=$(curl -sS -o /tmp/cf-dns-list.json -w "%{http_code}" \
             -H "Authorization: Bearer ${TOKEN}" \
             "https://api.cloudflare.com/client/v4/zones/${zone_id}/dns_records?name=${DOMAIN}")
-          if [ "${dns_code}" != "200" ]; then
+          if python3 deploy/pages_domain_dns.py dns-list-ok "${dns_code}"; then
+            if python3 deploy/pages_domain_dns.py has-record "${DOMAIN}" < /tmp/cf-dns-list.json; then
+              echo "DNS record for ${DOMAIN} already present"
+            else
+              echo "Creating proxied CNAME ${DOMAIN} → ${PAGES_DEV}"
+              create_code=$(curl -sS -o /tmp/cf-dns-create.json -w "%{http_code}" -X POST \
+                -H "Authorization: Bearer ${TOKEN}" \
+                -H "Content-Type: application/json" \
+                "https://api.cloudflare.com/client/v4/zones/${zone_id}/dns_records" \
+                -d "{\"type\":\"CNAME\",\"name\":\"${DOMAIN}\",\"content\":\"${PAGES_DEV}\",\"ttl\":1,\"proxied\":true}")
+              create_body=$(cat /tmp/cf-dns-create.json || true)
+              echo "DNS create HTTP ${create_code}: ${create_body}"
+              if printf '%s' "${create_body}" | python3 deploy/pages_domain_dns.py dns-ok "${create_code}"; then
+                echo "DNS CNAME for ${DOMAIN} ok"
+              else
+                echo "DNS create failed — grant Zone DNS Edit or add CNAME in Dashboard." >&2
+                exit 1
+              fi
+            fi
+          elif python3 deploy/pages_domain_dns.py dns-list-soft-skip "${dns_code}"; then
+            echo "DNS list HTTP ${dns_code}: $(cat /tmp/cf-dns-list.json)" >&2
+            echo "Skipping DNS ensure — token lacks Zone DNS Read/Edit; Dashboard must own CNAME ${DOMAIN} → ${PAGES_DEV}." >&2
+          else
             echo "DNS list HTTP ${dns_code}: $(cat /tmp/cf-dns-list.json)" >&2
             echo "Token needs Zone DNS Read/Edit or use Dashboard." >&2
             exit 1
-          fi
-          if python3 deploy/pages_domain_dns.py has-record "${DOMAIN}" < /tmp/cf-dns-list.json; then
-            echo "DNS record for ${DOMAIN} already present"
-          else
-            echo "Creating proxied CNAME ${DOMAIN} → ${PAGES_DEV}"
-            create_code=$(curl -sS -o /tmp/cf-dns-create.json -w "%{http_code}" -X POST \
-              -H "Authorization: Bearer ${TOKEN}" \
-              -H "Content-Type: application/json" \
-              "https://api.cloudflare.com/client/v4/zones/${zone_id}/dns_records" \
-              -d "{\"type\":\"CNAME\",\"name\":\"${DOMAIN}\",\"content\":\"${PAGES_DEV}\",\"ttl\":1,\"proxied\":true}")
-            create_body=$(cat /tmp/cf-dns-create.json || true)
-            echo "DNS create HTTP ${create_code}: ${create_body}"
-            if printf '%s' "${create_body}" | python3 deploy/pages_domain_dns.py dns-ok "${create_code}"; then
-              echo "DNS CNAME for ${DOMAIN} ok"
-            else
-              echo "DNS create failed — grant Zone DNS Edit or add CNAME in Dashboard." >&2
-              exit 1
-            fi
           fi
 
       - name: Smoke
