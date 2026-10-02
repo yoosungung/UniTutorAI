@@ -80,7 +80,7 @@ jobs:
           ACCOUNT_ID="${CLOUDFLARE_ACCOUNT_ID}"
           TOKEN="${CLOUDFLARE_API_TOKEN}"
           PROJECT=unitutor
-          DOMAIN=tutor.askwho.net
+          DOMAIN=unitutor.askwho.net
           ZONE_NAME=askwho.net
           PAGES_DEV=unitutor.pages.dev
           BASE="https://api.cloudflare.com/client/v4/accounts/${ACCOUNT_ID}/pages/projects/${PROJECT}/domains"
@@ -153,4 +153,4 @@ jobs:
             https://api.tutor.askwho.net/health
           # Custom domain may need a short DNS/TLS settle after first attach.
           curl -fsS --retry 12 --retry-all-errors --retry-delay 5 \
-            -o /dev/null https://tutor.askwho.net/
+            -o /dev/null https://unitutor.askwho.net/
