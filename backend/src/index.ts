@@ -9,7 +9,16 @@ export type CreateAppOptions = TutorRouteOptions;
 export function createApp(options: CreateAppOptions = {}) {
   const app = new Hono<{ Bindings: Bindings }>();
 
-  app.use('*', cors());
+  app.use(
+    '*',
+    cors({
+      allowHeaders: [
+        'Content-Type',
+        'Accept',
+        'X-UniTutor-Byok-Key',
+      ],
+    }),
+  );
 
   app.get('/health', (c) => {
     return c.json({

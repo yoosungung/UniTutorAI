@@ -12,7 +12,7 @@ UniTutor의 백엔드 컴포넌트 내부 설계다. 컴포넌트 간 계약과 
 
 1. **`TutorTurn` 추론 라우팅**
    - `POST /api/tutor/turn` → SSE(`tutor_turn_delta` · `tutor_turn` · `error`). 계약은 [ARCHITECTURE.md](../ARCHITECTURE.md) §2.6.
-   - MVP: `services/llm.ts`가 Gemini(`GEMINI_API_KEY`)만 호출한다. 키 없으면 503 `llm_unavailable`.
+   - MVP: `services/llm.ts`가 Gemini를 호출한다. 키 해석 순서는 **요청 `X-UniTutor-Byok-Key`(one-shot)** → 앱 `GEMINI_API_KEY`. 둘 다 없으면 503 `llm_unavailable`. BYOK 키는 서버에 영속 저장하지 않는다.
    - **후순위(미구현):** KV 시맨틱 캐시, 프롬프트 캐싱, DeepSeek cascade — 경로·바인딩만 §3·§4에 남겨 둔다.
 2. **정적 강좌 데이터 서빙**
    - 사전 가공된 강좌 정의, VTT 자막 매핑, 정적 지식 DAG JSON을 Cloudflare R2 또는 Worker Assets를 통해 서빙한다.
@@ -42,7 +42,8 @@ backend/
 
 ## 4. 환경 변수 및 바인딩 (wrangler)
 
-- `GEMINI_API_KEY`: 튜터 추론용 API 키.
+- `GEMINI_API_KEY`: 앱 소유 튜터 추론용 API 키(BYOK 미사용 시).
+- BYOK: 요청 헤더 `X-UniTutor-Byok-Key`로만 수신(브라우저 custody). 바인딩/시크릿으로 저장하지 않음.
 - `COURSE_STORAGE`: 강좌 정적 자산용 R2 버킷 바인딩 (선택).
 - `CACHE_KV`: 빈출 질의 시맨틱 캐시용 Workers KV 네임스페이스.
 

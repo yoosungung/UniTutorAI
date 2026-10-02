@@ -10,8 +10,7 @@ type Props = {
 
 /**
  * Shown when the free daily TutorTurn cap is exhausted.
- * Paid unlock + rewarded-ad stubs — no payment vendor / ad SDK in this ticket.
- * BYOK is deferred (product lock).
+ * Paid unlock + rewarded-ad stubs. BYOK register lives in the path toolbar.
  */
 export function QuotaGate({ onUnlockPaid, onWatchAdReward }: Props) {
   return (
@@ -27,10 +26,11 @@ export function QuotaGate({ onUnlockPaid, onWatchAdReward }: Props) {
     >
       <p style={{ margin: 0, fontSize: 15, lineHeight: 1.5 }}>
         오늘 무료 문답 {DAILY_FREE_TUTOR_TURN_LIMIT}회를 모두 썼어요. 광고를 보면{' '}
-        {AD_REWARD_TUTOR_TURNS}회를 더 쓰거나, 유료로 해제할 수 있습니다.
+        {AD_REWARD_TUTOR_TURNS}회를 더 쓰거나, 유료로 해제하거나, 위쪽의 내 API
+        키(BYOK)로 계속할 수 있습니다.
       </p>
       <p style={{ margin: 0, fontSize: 13, opacity: 0.8 }}>
-        광고 SDK는 스텁입니다(추론 원가 상쇄 경로). BYOK는 후속입니다.
+        광고 SDK·결제 벤더는 스텁입니다. BYOK 키는 브라우저에만 보관됩니다.
       </p>
       <button type="button" onClick={onWatchAdReward}>
         광고 보고 {AD_REWARD_TUTOR_TURNS}회 충전 (테스트)

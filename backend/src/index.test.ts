@@ -118,4 +118,70 @@ describe('POST /api/tutor/turn', () => {
     );
     expect(res.status).toBe(400);
   });
+
+  it('uses one-shot BYOK header when GEMINI_API_KEY is missing', async () => {
+    const seenKeys: string[] = [];
+    const fakeLlm: LlmClient = {
+      async *streamQuestion() {
+        yield { text: 'BYOK로 질문할까요?' };
+      },
+    };
+    const app = createApp({
+      createLlm: (apiKey) => {
+        seenKeys.push(apiKey);
+        return fakeLlm;
+      },
+    });
+    const byok = 'AIza-user-byok-not-a-secret';
+    const res = await app.request('/api/tutor/turn', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-UniTutor-Byok-Key': byok,
+      },
+      body: JSON.stringify({
+        courseId: 'cs50p-l0',
+        sourceSpanId: 'span-byok',
+      }),
+    });
+    expect(res.status).toBe(200);
+    expect(seenKeys).toEqual([byok]);
+    const text = await res.text();
+    expect(text).not.toContain(byok);
+    expect(text).toContain('BYOK로');
+  });
+
+  it('prefers BYOK header over env GEMINI_API_KEY', async () => {
+    const seenKeys: string[] = [];
+    const app = createApp({
+      createLlm: (apiKey) => {
+        seenKeys.push(apiKey);
+        return {
+          async *streamQuestion() {
+            yield { text: 'ok' };
+          },
+        };
+      },
+    });
+    const res = await app.request(
+      '/api/tutor/turn',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-UniTutor-Byok-Key': 'byok-wins',
+        },
+        body: JSON.stringify({
+          courseId: 'cs50p-l0',
+          sourceSpanId: 'span-1',
+        }),
+      },
+      { GEMINI_API_KEY: 'env-key-should-not-win' },
+    );
+    expect(res.status).toBe(200);
+    expect(seenKeys).toEqual(['byok-wins']);
+    const text = await res.text();
+    expect(text).not.toContain('byok-wins');
+    expect(text).not.toContain('env-key-should-not-win');
+  });
 });

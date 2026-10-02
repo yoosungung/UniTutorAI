@@ -67,4 +67,34 @@ describe('streamTutorTurn', () => {
     expect(result).toBeNull();
     expect(errors).toEqual(['llm_unavailable']);
   });
+
+  it('sends BYOK key one-shot via X-UniTutor-Byok-Key (not in JSON body)', async () => {
+    const turn: TutorTurn = {
+      id: 't-byok',
+      sourceSpanId: 'span-a',
+      question: '질문?',
+      escalationStep: 1,
+      citations: ['span-a'],
+      scope: 'in_lecture',
+    };
+    const body = `event: tutor_turn\ndata: ${JSON.stringify(turn)}\n\n`;
+    const fetchImpl = vi.fn(async (_url: string, init?: RequestInit) => {
+      return new Response(sseBody([body]), {
+        status: 200,
+        headers: { 'Content-Type': 'text/event-stream' },
+      });
+    }) as unknown as typeof fetch;
+
+    await streamTutorTurn(
+      { courseId: 'c', sourceSpanId: 'span-a' },
+      {},
+      { fetchImpl, byokApiKey: 'AIza-byok-secret-value' },
+    );
+
+    expect(fetchImpl).toHaveBeenCalledOnce();
+    const init = (fetchImpl.mock.calls[0] as unknown as [string, RequestInit])[1];
+    const headers = new Headers(init.headers);
+    expect(headers.get('X-UniTutor-Byok-Key')).toBe('AIza-byok-secret-value');
+    expect(String(init.body)).not.toContain('AIza-byok-secret-value');
+  });
 });

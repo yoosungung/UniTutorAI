@@ -1,4 +1,5 @@
 import { apiUrl } from './apiBase';
+import { BYOK_HEADER } from './byok';
 import type { EscalationStep, TutorTurn } from '../types/tutorTurn';
 import { assertValidTutorTurn } from './tutorTurn';
 
@@ -19,16 +20,28 @@ export type TutorStreamHandlers = {
 
 /**
  * POST /api/tutor/turn and consume SSE (ARCHITECTURE §2.6).
+ * Optional BYOK key is sent one-shot via header — never stored server-side.
  */
 export async function streamTutorTurn(
   body: TutorTurnRequestBody,
   handlers: TutorStreamHandlers = {},
-  init: { signal?: AbortSignal; fetchImpl?: typeof fetch } = {},
+  init: {
+    signal?: AbortSignal;
+    fetchImpl?: typeof fetch;
+    byokApiKey?: string | null;
+  } = {},
 ): Promise<TutorTurn | null> {
   const fetchImpl = init.fetchImpl ?? fetch;
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    Accept: 'text/event-stream',
+  };
+  const byok = init.byokApiKey?.trim();
+  if (byok) headers[BYOK_HEADER] = byok;
+
   const res = await fetchImpl(apiUrl('/api/tutor/turn'), {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', Accept: 'text/event-stream' },
+    headers,
     body: JSON.stringify(body),
     signal: init.signal,
   });

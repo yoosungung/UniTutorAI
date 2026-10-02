@@ -57,7 +57,9 @@ export function createTutorRoutes(options: TutorRouteOptions = {}) {
   const createLlm = options.createLlm ?? createGeminiClient;
 
   tutor.post('/turn', async (c) => {
-    const apiKey = c.env?.GEMINI_API_KEY?.trim();
+    // BYOK one-shot header wins; env key is unused when BYOK is present.
+    const byok = c.req.header('X-UniTutor-Byok-Key')?.trim();
+    const apiKey = byok || c.env?.GEMINI_API_KEY?.trim();
     if (!apiKey) {
       return c.json({ error: 'llm_unavailable' }, 503);
     }
