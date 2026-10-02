@@ -111,7 +111,7 @@ API 403·zone mismatch면 토큰 권한(Pages Edit + Zone DNS Edit) 또는 대�
 
 - `on:` `push` `main` + `workflow_dispatch`
 - Secrets: `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID` (repo Actions secrets)
-- 순서: Worker `npm run deploy` → Ensure Pages project (`unitutor`) → Pages `deploy:pages` → Ensure Pages custom domain (`tutor.askwho.net`) → Smoke
+- 순서: Worker `npm run deploy` → Ensure Pages project (`unitutor`) → Pages `deploy:pages` → Ensure Pages custom domain (`tutor.askwho.net`) → Ensure Pages domain DNS CNAME → Smoke
 - D1 `migrations apply`: **N/A** (바인딩 없음; 생기면 apply → deploy로 확장)
 - Smoke: `https://api.tutor.askwho.net/health` + `https://tutor.askwho.net/`
 
