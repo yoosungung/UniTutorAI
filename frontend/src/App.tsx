@@ -35,6 +35,7 @@ import {
   saveLearnerState,
   type WrongAnswerRecord,
 } from './lib/storage';
+import { consumeLtiLaunchFromLocation } from './lib/ltiLaunch';
 import { hasByokApiKey } from './lib/byok';
 import { isOnDeviceEnabled } from './lib/onDevice';
 import {
@@ -114,6 +115,14 @@ export default function App() {
     isOnDeviceEnabled(),
   );
   const [onDeviceEpoch, setOnDeviceEpoch] = useState(0);
+  const [ltiLearnerId, setLtiLearnerId] = useState<string | null>(null);
+  const [ltiCourseId, setLtiCourseId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const launch = consumeLtiLaunchFromLocation();
+    if (launch.ltiLearnerId) setLtiLearnerId(launch.ltiLearnerId);
+    if (launch.courseId) setLtiCourseId(launch.courseId);
+  }, []);
 
   useEffect(() => {
     saveLearnerState({
@@ -296,9 +305,23 @@ export default function App() {
     setLastClosedSummary(card.summary);
   }
 
+  const ltiLaunchNote =
+    ltiLearnerId != null ? (
+      <p
+        aria-label="LTI launch"
+        data-lti-course-id={ltiCourseId ?? undefined}
+        data-lti-learner-id={ltiLearnerId}
+        style={{ fontSize: 12, opacity: 0.75, margin: '8px 12px' }}
+      >
+        LMS 입장
+        {ltiCourseId ? ` · ${ltiCourseId}` : ''}
+      </p>
+    ) : null;
+
   if (!path) {
     return (
       <div style={{ width: '100vw', height: '100vh', overflow: 'auto' }}>
+        {ltiLaunchNote}
         <OnboardingInterview
           spans={CS50P_LECTURE_0_SPANS}
           knownSpanIds={knownSpanIds}
@@ -318,6 +341,7 @@ export default function App() {
         flexDirection: 'column',
       }}
     >
+      {ltiLaunchNote}
       <div
         style={{
           maxHeight: '28vh',

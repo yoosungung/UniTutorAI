@@ -14,6 +14,7 @@
 - `ReviewCard`는 세션이 닫힐 때 한 장 생긴다.
 - 우회는 경로에 `SourceSpan`을 끼워 넣는다. 그 구간이 끝나면 원래 장면의 질문으로 돌아온다.
 - LTI 런치는 **세션 입장**(identity + `CourseRef` 바인딩)만 담당한다. `TutorTurn`·`SourceSpan` 계약을 바꾸지 않는다.
+- LTI `id_token`은 Platform JWKS로 서명 검증한다(unsigned·만료 거부). fail-closed.
 - LTI 학습자는 D1에 `(iss, client_id, deployment_id, sub)`로 링크한다(옵션 B). 이메일 등 PII claim은 필수 저장하지 않는다.
 - AGS·NRPS·Deep Linking·LTI 1.1은 이 계약 밖이다.
 
@@ -117,7 +118,7 @@ SSE 이벤트 이름:
 | 메서드 | 경로 | 결과 |
 |--------|------|------|
 | `GET` | `/lti/oidc/login` | Platform 3rd-party login 개시 → Platform auth URL로 302 |
-| `POST` | `/lti/launch` | form `id_token`(+`state`) 검증 → FE 공부 캔버스 302 |
+| `POST` | `/lti/launch` | form `id_token`(+`state`) **JWKS 서명 검증** → FE 공부 캔버스 302 |
 
 쿼리/폼 최소값과 JWT claim 매핑:
 

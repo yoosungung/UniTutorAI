@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
 import type { Bindings } from '../types/bindings';
+import { verifyIdTokenWithJwks } from '../services/ltiJwt';
 import {
   D1LtiStore,
   type LtiIdTokenClaims,
@@ -8,38 +9,11 @@ import {
 
 export type LtiRouteOptions = {
   ltiStore?: LtiStore;
+  /** Override JWKS verify (unit tests). Production default = Platform JWKS. */
   verifyIdToken?: (idToken: string, jwksUrl: string) => Promise<LtiIdTokenClaims>;
 };
 
-const DEPLOYMENT_CLAIM =
-  'https://purl.imsglobal.org/spec/lti/claim/deployment_id';
-const MESSAGE_TYPE_CLAIM =
-  'https://purl.imsglobal.org/spec/lti/claim/message_type';
-const VERSION_CLAIM = 'https://purl.imsglobal.org/spec/lti/claim/version';
-const RESOURCE_LINK_CLAIM =
-  'https://purl.imsglobal.org/spec/lti/claim/resource_link';
-
-/** Decode JWT payload without signature check — tests inject verifyIdToken. */
-export function decodeIdTokenPayloadUnsafe(idToken: string): LtiIdTokenClaims {
-  const parts = idToken.split('.');
-  if (parts.length < 2) throw new Error('malformed_jwt');
-  const json = JSON.parse(
-    atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')),
-  ) as Record<string, unknown>;
-  const audRaw = json.aud;
-  const aud = Array.isArray(audRaw) ? String(audRaw[0]) : String(audRaw ?? '');
-  const resource = json[RESOURCE_LINK_CLAIM] as { id?: string } | undefined;
-  return {
-    iss: String(json.iss ?? ''),
-    aud,
-    sub: String(json.sub ?? ''),
-    nonce: String(json.nonce ?? ''),
-    deploymentId: String(json[DEPLOYMENT_CLAIM] ?? ''),
-    messageType: String(json[MESSAGE_TYPE_CLAIM] ?? ''),
-    version: String(json[VERSION_CLAIM] ?? ''),
-    resourceLinkId: String(resource?.id ?? ''),
-  };
-}
+export { decodeIdTokenPayloadUnsafe } from '../services/ltiJwt';
 
 function assertLaunchClaims(
   claims: LtiIdTokenClaims,
@@ -72,10 +46,7 @@ export function createLtiRoutes(options: LtiRouteOptions = {}) {
     throw new Error('lti_store_unavailable');
   }
 
-  const verify =
-    options.verifyIdToken ??
-    (async (idToken: string, _jwksUrl: string) =>
-      decodeIdTokenPayloadUnsafe(idToken));
+  const verify = options.verifyIdToken ?? verifyIdTokenWithJwks;
 
   lti.get('/oidc/login', async (c) => {
     const iss = c.req.query('iss')?.trim();

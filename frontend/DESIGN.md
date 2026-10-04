@@ -54,6 +54,9 @@ UniTutor의 프론트엔드 컴포넌트 내부 설계다. 컴포넌트 간 계�
    - `lib/onDevice.ts` 선호·WebGPU probe; `lib/onDeviceTutor.ts`가 엔진으로 1질문 생성 후 `assertValidTutorTurn`.
    - `@mlc-ai/web-llm`은 `lib/webLlmEngine.ts` + `workers/webllm.worker.ts`로 **동적 로드**(기본 번들·클라우드 경로에 상주하지 않음).
    - `OnDevicePanel`로 opt-in. 활성 시 무료 한도 미과금(클라우드 추론 $0). COOP/COEP·대용량 모델 UX는 후속.
+9. **LTI launch 쿼리 소비**
+   - `lib/ltiLaunch.ts`: `?courseId=&ltiLearnerId=` 파싱 → `unitutor:lti-learner` 저장 → `history.replaceState`로 쿼리 제거.
+   - `App.tsx` 마운트 시 1회 소비. MVP는 CS50P 하드코딩 캔버스 유지(추가 강좌 라우팅은 후속).
 
 ## 3. 내부 디렉터리 구조
 
@@ -84,6 +87,7 @@ frontend/
     │   ├── reviewNotify.ts # CardFaded + SW 알림·일 3회 한도
     │   ├── tutorQuota.ts # 무료 5/일 + 광고 +3 스텁 + 유료 entitlement
     │   ├── tutorStream.ts # POST /api/tutor/turn SSE 파서
+    │   ├── ltiLaunch.ts # LTI redirect query 소비·learner 로컬 저장
     │   ├── onDevice.ts # 온디바이스 opt-in + WebGPU probe
     │   ├── onDeviceTutor.ts # 로컬 TutorTurn 생성(엔진 injectable)
     │   ├── webLlmEngine.ts # @mlc-ai/web-llm 동적 로드
