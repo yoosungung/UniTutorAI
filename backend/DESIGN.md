@@ -12,7 +12,7 @@ UniTutor의 백엔드 컴포넌트 내부 설계다. 컴포넌트 간 계약과 
 
 1. **`TutorTurn` 추론 라우팅**
    - `POST /api/tutor/turn` → SSE(`tutor_turn_delta` · `tutor_turn` · `error`). 계약은 [ARCHITECTURE.md](../ARCHITECTURE.md) §2.6.
-   - MVP: `services/llm.ts`가 Gemini를 호출한다. 키 해석 순서는 **요청 `X-UniTutor-Byok-Key`(one-shot)** → 앱 `GEMINI_API_KEY`. 둘 다 없으면 503 `llm_unavailable`. BYOK 키는 서버에 영속 저장하지 않는다.
+   - MVP: `services/llm.ts`가 Gemini를 호출한다. 키 해석 순서는 **요청 `X-UniTutor-Byok-Key`(one-shot)** → 앱 `GEMINI_API_KEY`. 둘 다 없으면 503 `llm_unavailable`. BYOK 키는 서버에 영속 저장하지 않는다. 브라우저 온디바이스(WebLLM) opt-in 시 FE가 이 경로를 호출하지 않는다(ARCHITECTURE §2.6).
    - **후순위(미구현):** KV 시맨틱 캐시, 프롬프트 캐싱, DeepSeek cascade — 경로·바인딩만 §3·§4에 남겨 둔다.
 2. **정적 강좌 데이터 서빙**
    - 사전 가공된 강좌 정의, VTT 자막 매핑, 정적 지식 DAG JSON을 Cloudflare R2 또는 Worker Assets를 통해 서빙한다.

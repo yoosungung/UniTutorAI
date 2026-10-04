@@ -5,6 +5,7 @@ import { PathView } from './components/path/PathView';
 import { FormulaInput } from './components/math/FormulaInput';
 import { QuotaGate } from './components/tutor/QuotaGate';
 import { ByokPanel } from './components/tutor/ByokPanel';
+import { OnDevicePanel } from './components/tutor/OnDevicePanel';
 import { TutorPane } from './components/tutor/TutorPane';
 import { TutorTurnView } from './components/tutor/TutorTurnView';
 import {
@@ -34,6 +35,7 @@ import {
   type WrongAnswerRecord,
 } from './lib/storage';
 import { hasByokApiKey } from './lib/byok';
+import { isOnDeviceEnabled } from './lib/onDevice';
 import {
   grantAdReward,
   loadEntitlement,
@@ -107,6 +109,10 @@ export default function App() {
   const [tutorAllowed, setTutorAllowed] = useState(true);
   const [byokActive, setByokActive] = useState(() => hasByokApiKey());
   const [byokEpoch, setByokEpoch] = useState(0);
+  const [onDeviceActive, setOnDeviceActive] = useState(() =>
+    isOnDeviceEnabled(),
+  );
+  const [onDeviceEpoch, setOnDeviceEpoch] = useState(0);
 
   useEffect(() => {
     saveLearnerState({
@@ -177,6 +183,7 @@ export default function App() {
     allowLocalFallback: Boolean(import.meta.env.DEV),
     localFallback: turnForSpan,
     byokEpoch,
+    onDeviceEpoch,
   });
 
   const baseTurn = useMemo((): TutorTurn | null => {
@@ -207,9 +214,10 @@ export default function App() {
     }
     const result = tryConsumeTutorTurn(turn.id, new Date(), entitlement, 5, {
       byokActive,
+      onDeviceActive,
     });
     setTutorAllowed(result.allowed);
-  }, [turn?.id, entitlement.plan, byokActive]);
+  }, [turn?.id, entitlement.plan, byokActive, onDeviceActive]);
 
   function toggleKnown(spanId: string) {
     setKnownSpanIds((prev) =>
@@ -345,6 +353,24 @@ export default function App() {
             </button>
           )}
         </div>
+        <OnDevicePanel
+          onChanged={(active) => {
+            setOnDeviceActive(active);
+            setOnDeviceEpoch((n) => n + 1);
+            if (active && turn) {
+              setTutorAllowed(true);
+            } else if (turn) {
+              const result = tryConsumeTutorTurn(
+                turn.id,
+                new Date(),
+                entitlement,
+                5,
+                { byokActive, onDeviceActive: active },
+              );
+              setTutorAllowed(result.allowed);
+            }
+          }}
+        />
         <ByokPanel
           onChanged={(active) => {
             setByokActive(active);
@@ -357,7 +383,7 @@ export default function App() {
                 new Date(),
                 entitlement,
                 5,
-                { byokActive: active },
+                { byokActive: active, onDeviceActive },
               );
               setTutorAllowed(result.allowed);
             }
@@ -407,7 +433,7 @@ export default function App() {
                         new Date(),
                         entitlement,
                         5,
-                        { byokActive },
+                        { byokActive, onDeviceActive },
                       );
                       setTutorAllowed(result.allowed);
                     }
@@ -415,6 +441,10 @@ export default function App() {
                 />
               ) : tutorLoading && !turn ? (
                 <p aria-busy="true">튜터 질문을 불러오는 중…</p>
+              ) : !turn && tutorStreamError ? (
+                <p role="status" style={{ fontSize: 13 }}>
+                  온디바이스/스트림 안내: {tutorStreamError}
+                </p>
               ) : turn ? (
                 <>
                   {tutorStreamError && (

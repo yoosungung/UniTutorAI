@@ -12,6 +12,7 @@ This file provides guidance to AI coding assistants (Claude Code, Codex, Gemini,
 |------|------|------|
 | `AGENTS.md` (이 파일, 정본) ← `CLAUDE.md`, `GEMINI.md` 심볼릭 | 수행 방법 + 문서 레이아웃 + 현황 | 루트 |
 | `docs/PRODUCT.md` | 제품 방향·기능·사용자 경험 | `docs/` |
+| `docs/proposals/` | 미승인 Architecture/API 제안 초안 (승인 전 계약 본문 아님) | `docs/proposals/` |
 | `ARCHITECTURE.md` | **계약사항(불변 규칙)** + 컴포넌트 *간* 인터페이스 형태(스키마·레이아웃·이벤트) | 루트 |
 | `README.md` | 저장소 방문자용 소개 + 로컬 quickstart | 루트 |
 | `ROADMAP.md` | 수행 계획(마일스톤·순서·미결정 항목) | 루트 |
@@ -38,5 +39,5 @@ This file provides guidance to AI coding assistants (Claude Code, Codex, Gemini,
  
 ## 3. Status
 
-backend · frontend 스켈레톤, 적응형 2분할 캔버스(YouTube iframe), CS50P L0 정적 `SourceSpan`·`knowledgeDag` 픽스처, 온보딩 경로 축소(`planned`/`skipped`/`current`)·`DetourInserted`, Workers `POST /api/tutor/turn` SSE(`TutorTurn`) + Gemini 라우팅(+ BYOK `X-UniTutor-Byok-Key` one-shot), `CitationSelected`→`startSec` seek, local-first 진도·오답, 로컬 FSRS `SessionClosed`→`ReviewCard`, 클라이언트 Math.js `formulaVerdict`, Web Push/SW `CardFaded` 알림(일 3회), 무료 문답 일 5회·광고 보상(+3 스텁)·유료 스텁 CTA·브라우저 BYOK가 있다.
+backend · frontend 스켈레톤, 적응형 2분할 캔버스(YouTube iframe), CS50P L0 정적 `SourceSpan`·`knowledgeDag` 픽스처, 온보딩 경로 축소(`planned`/`skipped`/`current`)·`DetourInserted`, Workers `POST /api/tutor/turn` SSE(`TutorTurn`) + Gemini 라우팅(+ BYOK `X-UniTutor-Byok-Key` one-shot), 온디바이스 WebLLM opt-in(`on_device_unsupported` fallback), `CitationSelected`→`startSec` seek, local-first 진도·오답, 로컬 FSRS `SessionClosed`→`ReviewCard`, 클라이언트 Math.js `formulaVerdict`, Web Push/SW `CardFaded` 알림(일 3회), 무료 문답 일 5회·광고 보상(+3 스텁)·유료 스텁 CTA·브라우저 BYOK가 있다.
 

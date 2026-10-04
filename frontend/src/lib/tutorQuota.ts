@@ -145,7 +145,13 @@ export function remainingFreeTurns(
 export type TutorQuotaOptions = {
   /** When true, app inference cost is $0 — do not gate or charge free quota. */
   byokActive?: boolean;
+  /** On-device WebLLM — cloud inference cost $0; same quota bypass as BYOK. */
+  onDeviceActive?: boolean;
 };
+
+function isZeroCloudCost(options: TutorQuotaOptions): boolean {
+  return Boolean(options.byokActive || options.onDeviceActive);
+}
 
 export function canShowTutorTurn(
   ledger: TutorQuotaLedger,
@@ -153,14 +159,14 @@ export function canShowTutorTurn(
   base: number = DAILY_FREE_TUTOR_TURN_LIMIT,
   options: TutorQuotaOptions = {},
 ): boolean {
-  if (options.byokActive) return true;
+  if (isZeroCloudCost(options)) return true;
   if (entitlement.plan === 'paid') return true;
   return ledger.count < effectiveFreeLimit(ledger, base);
 }
 
 /**
  * Reserve one free TutorTurn for `turnId` (idempotent per UTC day).
- * Paid entitlement and BYOK always allow and never increment the free ledger.
+ * Paid entitlement, BYOK, and on-device always allow and never increment the free ledger.
  */
 export function tryConsumeTutorTurn(
   turnId: string,
@@ -173,7 +179,7 @@ export function tryConsumeTutorTurn(
   let ledger = loadTutorQuotaLedger(now);
   if (ledger.day !== day) ledger = emptyLedger(day);
 
-  if (options.byokActive || entitlement.plan === 'paid') {
+  if (isZeroCloudCost(options) || entitlement.plan === 'paid') {
     return { allowed: true, ledger, entitlement };
   }
 

@@ -106,3 +106,5 @@ SSE 이벤트 이름:
 | `error` | `{ "error": string }` | 스트림 중 실패. 비밀·키 값 미포함 |
 
 앱 `GEMINI_API_KEY`와 BYOK 헤더가 **둘 다** 없으면 SSE를 열지 않고 **503** `{ "error": "llm_unavailable" }`(키 미노출). MVP Provider는 Gemini만; 프롬프트 캐싱·DeepSeek cascade는 후속.
+
+**클라이언트 라우팅 우선순위(학습자 opt-in):** 온디바이스 WebLLM이 켜져 있으면 Workers SSE를 호출하지 않는다. WebGPU 불가·로드 실패 시 명시적 `on_device_unsupported` / `on_device_failed`만 노출하고 클라우드로 조용히 넘기지 않는다. 오프이면 기존 BYOK 헤더 → 앱 `GEMINI_API_KEY` 경로를 쓴다.
