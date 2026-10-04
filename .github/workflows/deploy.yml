@@ -1,7 +1,7 @@
 # UniTutor Worker → Pages → Cloudflare.
 # Secrets: CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID
 # Manual: gh workflow run deploy.yml
-# D1 migrations: N/A until a binding exists (then apply → deploy like sw-factory).
+# D1 migrations: backend `npm run deploy` applies DB --remote before wrangler deploy.
 name: Deploy
 
 on:

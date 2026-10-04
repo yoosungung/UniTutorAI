@@ -31,4 +31,9 @@ describe("deploy.yml Pages bootstrap", () => {
     expect(deployYml).toMatch(/dns-list-soft-skip/);
     expect(deployYml).toMatch(/Skipping DNS ensure/);
   });
+
+  it("documents D1 apply-before-deploy via backend npm run deploy", () => {
+    expect(deployYml).toMatch(/D1 migrations:\s*backend `npm run deploy` applies DB --remote before wrangler deploy/);
+    expect(deployYml).toMatch(/working-directory: backend[\s\S]*npm run deploy/);
+  });
 });
