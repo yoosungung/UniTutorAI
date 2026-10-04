@@ -20,6 +20,10 @@ UniTutor의 프론트엔드 컴포넌트 내부 설계다. 컴포넌트 간 계�
    - `CitationSelected` 이벤트 발생 시 지정된 `SourceSpan.startSec`로 정확히 탐색(`seekTo`) 및 재생.
    - 1단계 구현: embed URL `?start=` 재마운트(nocookie). IFrame API `seekTo`는 후속 고도화.
    - 플레이어 영역 위에 어떤 튜터 UI도 오버레이되지 않도록 독립 DOM 격리.
+2b. **슬라이드·개념 검색 (`PictureSearch`)**
+   - `lib/pictureSearch.ts`: 정적 `SourceSpan`의 `slideLabel`/`concept` 부분 문자열 검색(비전·임베딩 없음).
+   - `components/canvas/PictureSearch.tsx`: 공부 캔버스 상단 UI. 선택 시 기존 `resolveCitationSelected` → `CitationSelected` seek.
+   - ARCHITECTURE 스키마 확장 없음. Editor/Roommate·이미지 검색은 PRODUCT §7 나중 모드.
 3. **TutorTurn UI (1질문 + 인용)**
    - `TutorTurnView`: `question` 하나 + `citations` 버튼. 정답/풀이 필드 없음.
    - `scope=out_of_scope`이면 citations 숨김·범위 밖 안내만.
@@ -45,6 +49,11 @@ UniTutor의 프론트엔드 컴포넌트 내부 설계다. 컴포넌트 간 계�
    - 광고 스텁 `grantAdReward`: 1회당 **+3** (`AD_REWARD_TUTOR_TURNS`). 광고 SDK/벤더 없음 — 계약·보안 전 `@eric.yoo`.
    - 유료 entitlement `unitutor:entitlement` (`plan: paid`). 결제 벤더 없음 — `QuotaGate` 테스트 CTA.
    - BYOK: `lib/byok.ts`가 `localStorage` 키 `unitutor:byok-gemini`에 Gemini 키를 브라우저만 보관. `ByokPanel`로 등록·해제. 요청 시 `X-UniTutor-Byok-Key` one-shot. 활성 시 무료 한도 미과금(앱 추론 원가 $0).
+8. **온디바이스 WebLLM (`TutorTurn`, opt-in)**
+   - 우선순위: 온디바이스(켜짐) → (불가 시 명시적 `on_device_unsupported`/`on_device_failed`, 클라우드 무전환) / 꺼짐이면 SSE(+BYOK).
+   - `lib/onDevice.ts` 선호·WebGPU probe; `lib/onDeviceTutor.ts`가 엔진으로 1질문 생성 후 `assertValidTutorTurn`.
+   - `@mlc-ai/web-llm`은 `lib/webLlmEngine.ts` + `workers/webllm.worker.ts`로 **동적 로드**(기본 번들·클라우드 경로에 상주하지 않음).
+   - `OnDevicePanel`로 opt-in. 활성 시 무료 한도 미과금(클라우드 추론 $0). COOP/COEP·대용량 모델 UX는 후속.
 
 ## 3. 내부 디렉터리 구조
 
@@ -60,7 +69,7 @@ frontend/
     ├── main.tsx       # React 앱 마운트 진입점
     ├── App.tsx        # 최상위 라우터 및 글로벌 레이아웃
     ├── components/    # UI 컴포넌트
-    │   ├── canvas/    # 적응형 2분할 캔버스 및 분할 핸들러
+    │   ├── canvas/    # 적응형 2분할 캔버스·PictureSearch·분할 핸들러
     │   ├── player/    # YouTube IFrame 플레이어 래퍼 (타임스탬프 딥링크)
     │   ├── tutor/     # 소크라테스 튜터 대화창 및 접힌 속생각(Thinking Traces)
     │   ├── path/      # 학습 경로(planned/skipped/current/detour)
@@ -75,14 +84,20 @@ frontend/
     │   ├── reviewNotify.ts # CardFaded + SW 알림·일 3회 한도
     │   ├── tutorQuota.ts # 무료 5/일 + 광고 +3 스텁 + 유료 entitlement
     │   ├── tutorStream.ts # POST /api/tutor/turn SSE 파서
+    │   ├── onDevice.ts # 온디바이스 opt-in + WebGPU probe
+    │   ├── onDeviceTutor.ts # 로컬 TutorTurn 생성(엔진 injectable)
+    │   ├── webLlmEngine.ts # @mlc-ai/web-llm 동적 로드
+    │   ├── pictureSearch.ts # 정적 slideLabel/concept 검색
     │   └── storage.ts # localStorage 진도·오답·reviewCards (키 unitutor:learner:{courseId})
-    ├── hooks/         # useLayoutMode, useTutorTurn(SSE) 등
+    ├── workers/       # webllm.worker.ts (WebWorkerMLCEngineHandler)
+    ├── hooks/         # useLayoutMode, useTutorTurn(SSE|on-device) 등
     └── types/         # 프론트엔드 전용 내부 타입 정의
         ├── reviewCard.ts # ReviewCard (ARCHITECTURE §2.4)
         └── events.ts  # CitationSelected / DetourInserted / SessionClosed / CardFaded
 ```
 
 `components/tutor/QuotaGate.tsx`는 한도 초과 시 광고 충전(+3)·유료 unlock CTA(테스트 스텁).
+`components/tutor/OnDevicePanel.tsx`는 WebLLM opt-in 토글.
 
 Vite `public/sw.js`는 빌드 시 사이트 루트로 복사된다.
 ## 환경 변수 (Vite / Pages)

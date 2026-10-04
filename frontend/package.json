@@ -12,6 +12,7 @@
     "deploy:pages:dry-run": "npm run build"
   },
   "dependencies": {
+    "@mlc-ai/web-llm": "^0.2.85",
     "katex": "^0.16.11",
     "lucide-react": "^0.453.0",
     "mathjs": "^15.2.0",

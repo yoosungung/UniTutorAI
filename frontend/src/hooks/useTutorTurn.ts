@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import { loadByokApiKey } from '../lib/byok';
+import { isOnDeviceEnabled } from '../lib/onDevice';
+import { runOnDeviceTutorTurn } from '../lib/onDeviceTutor';
 import { streamTutorTurn } from '../lib/tutorStream';
 import type { TutorTurn } from '../types/tutorTurn';
 
@@ -12,6 +14,8 @@ export type UseTutorTurnInput = {
   localFallback?: (spanId: string) => TutorTurn;
   /** Bump to re-fetch when BYOK register/clear changes. */
   byokEpoch?: number;
+  /** Bump to re-fetch when on-device opt-in toggles. */
+  onDeviceEpoch?: number;
 };
 
 export type UseTutorTurnState = {
@@ -22,8 +26,9 @@ export type UseTutorTurnState = {
 };
 
 /**
- * Loads a TutorTurn from Workers SSE when sourceSpanId changes.
- * Sends browser BYOK key one-shot when present.
+ * Loads a TutorTurn. Priority when on-device is enabled:
+ * on-device WebLLM → (explicit unsupported/failed, no silent cloud).
+ * Otherwise: Workers SSE (+ optional BYOK header).
  */
 export function useTutorTurn(input: UseTutorTurnInput): UseTutorTurnState {
   const [turn, setTurn] = useState<TutorTurn | null>(null);
@@ -37,6 +42,7 @@ export function useTutorTurn(input: UseTutorTurnInput): UseTutorTurnState {
   const allowLocalFallback = input.allowLocalFallback;
   const localFallback = input.localFallback;
   const byokEpoch = input.byokEpoch ?? 0;
+  const onDeviceEpoch = input.onDeviceEpoch ?? 0;
 
   useEffect(() => {
     if (!spanId) {
@@ -55,6 +61,32 @@ export function useTutorTurn(input: UseTutorTurnInput): UseTutorTurnState {
     setTurn(null);
 
     void (async () => {
+      if (isOnDeviceEnabled()) {
+        const local = await runOnDeviceTutorTurn(
+          { courseId, sourceSpanId: spanId, concept },
+          {
+            onDelta: (text) => {
+              if (cancelled) return;
+              setStreamingQuestion(text);
+            },
+            onError: (err) => {
+              if (cancelled) return;
+              setError(err);
+            },
+          },
+        );
+        if (cancelled) return;
+        if (local) {
+          setTurn(local);
+          setStreamingQuestion(local.question);
+          setLoading(false);
+          return;
+        }
+        // Opt-in local path: never silently fall through to cloud.
+        setLoading(false);
+        return;
+      }
+
       let assembled = '';
       const result = await streamTutorTurn(
         {
@@ -98,7 +130,7 @@ export function useTutorTurn(input: UseTutorTurnInput): UseTutorTurnState {
       if (cancelled || ac.signal.aborted) return;
       if (e instanceof DOMException && e.name === 'AbortError') return;
       const msg = e instanceof Error ? e.message : 'stream_failed';
-      if (allowLocalFallback && localFallback && spanId) {
+      if (allowLocalFallback && localFallback && spanId && !isOnDeviceEnabled()) {
         const fallback = localFallback(spanId);
         setTurn(fallback);
         setStreamingQuestion(fallback.question);
@@ -113,7 +145,15 @@ export function useTutorTurn(input: UseTutorTurnInput): UseTutorTurnState {
       cancelled = true;
       ac.abort();
     };
-  }, [spanId, courseId, concept, allowLocalFallback, localFallback, byokEpoch]);
+  }, [
+    spanId,
+    courseId,
+    concept,
+    allowLocalFallback,
+    localFallback,
+    byokEpoch,
+    onDeviceEpoch,
+  ]);
 
   return { turn, streamingQuestion, error, loading };
 }

@@ -83,6 +83,18 @@ describe('canShowTutorTurn', () => {
       true,
     );
   });
+
+  it('never blocks when on-device is active (cloud inference cost $0)', () => {
+    const ledger: TutorQuotaLedger = {
+      day,
+      count: 99,
+      consumedTurnIds: [],
+      bonusTurns: 0,
+    };
+    expect(
+      canShowTutorTurn(ledger, { plan: 'free' }, 5, { onDeviceActive: true }),
+    ).toBe(true);
+  });
 });
 
 describe('tryConsumeTutorTurn', () => {
@@ -153,6 +165,26 @@ describe('tryConsumeTutorTurn', () => {
     expect(result.allowed).toBe(true);
     expect(result.ledger.count).toBe(5);
     expect(result.ledger.consumedTurnIds).not.toContain('turn-byok');
+  });
+
+  it('allows without counting when on-device is active', () => {
+    const now = new Date('2026-10-02T12:00:00.000Z');
+    saveTutorQuotaLedger({
+      day: utcDayKey(now),
+      count: 5,
+      consumedTurnIds: ['1', '2', '3', '4', '5'],
+      bonusTurns: 0,
+    });
+    const result = tryConsumeTutorTurn(
+      'turn-on-device',
+      now,
+      loadEntitlement(),
+      5,
+      { onDeviceActive: true },
+    );
+    expect(result.allowed).toBe(true);
+    expect(result.ledger.count).toBe(5);
+    expect(result.ledger.consumedTurnIds).not.toContain('turn-on-device');
   });
 
   it('resets daily count when the UTC day rolls', () => {
