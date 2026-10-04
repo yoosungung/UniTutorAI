@@ -49,6 +49,11 @@ UniTutor의 프론트엔드 컴포넌트 내부 설계다. 컴포넌트 간 계�
    - 광고 스텁 `grantAdReward`: 1회당 **+3** (`AD_REWARD_TUTOR_TURNS`). 광고 SDK/벤더 없음 — 계약·보안 전 `@eric.yoo`.
    - 유료 entitlement `unitutor:entitlement` (`plan: paid`). 결제 벤더 없음 — `QuotaGate` 테스트 CTA.
    - BYOK: `lib/byok.ts`가 `localStorage` 키 `unitutor:byok-gemini`에 Gemini 키를 브라우저만 보관. `ByokPanel`로 등록·해제. 요청 시 `X-UniTutor-Byok-Key` one-shot. 활성 시 무료 한도 미과금(앱 추론 원가 $0).
+8. **온디바이스 WebLLM (`TutorTurn`, opt-in)**
+   - 우선순위: 온디바이스(켜짐) → (불가 시 명시적 `on_device_unsupported`/`on_device_failed`, 클라우드 무전환) / 꺼짐이면 SSE(+BYOK).
+   - `lib/onDevice.ts` 선호·WebGPU probe; `lib/onDeviceTutor.ts`가 엔진으로 1질문 생성 후 `assertValidTutorTurn`.
+   - `@mlc-ai/web-llm`은 `lib/webLlmEngine.ts` + `workers/webllm.worker.ts`로 **동적 로드**(기본 번들·클라우드 경로에 상주하지 않음).
+   - `OnDevicePanel`로 opt-in. 활성 시 무료 한도 미과금(클라우드 추론 $0). COOP/COEP·대용량 모델 UX는 후속.
 
 ## 3. 내부 디렉터리 구조
 
@@ -79,15 +84,20 @@ frontend/
     │   ├── reviewNotify.ts # CardFaded + SW 알림·일 3회 한도
     │   ├── tutorQuota.ts # 무료 5/일 + 광고 +3 스텁 + 유료 entitlement
     │   ├── tutorStream.ts # POST /api/tutor/turn SSE 파서
+    │   ├── onDevice.ts # 온디바이스 opt-in + WebGPU probe
+    │   ├── onDeviceTutor.ts # 로컬 TutorTurn 생성(엔진 injectable)
+    │   ├── webLlmEngine.ts # @mlc-ai/web-llm 동적 로드
     │   ├── pictureSearch.ts # 정적 slideLabel/concept 검색
     │   └── storage.ts # localStorage 진도·오답·reviewCards (키 unitutor:learner:{courseId})
-    ├── hooks/         # useLayoutMode, useTutorTurn(SSE) 등
+    ├── workers/       # webllm.worker.ts (WebWorkerMLCEngineHandler)
+    ├── hooks/         # useLayoutMode, useTutorTurn(SSE|on-device) 등
     └── types/         # 프론트엔드 전용 내부 타입 정의
         ├── reviewCard.ts # ReviewCard (ARCHITECTURE §2.4)
         └── events.ts  # CitationSelected / DetourInserted / SessionClosed / CardFaded
 ```
 
 `components/tutor/QuotaGate.tsx`는 한도 초과 시 광고 충전(+3)·유료 unlock CTA(테스트 스텁).
+`components/tutor/OnDevicePanel.tsx`는 WebLLM opt-in 토글.
 
 Vite `public/sw.js`는 빌드 시 사이트 루트로 복사된다.
 ## 환경 변수 (Vite / Pages)
