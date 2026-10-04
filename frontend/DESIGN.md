@@ -23,7 +23,11 @@ UniTutor의 프론트엔드 컴포넌트 내부 설계다. 컴포넌트 간 계�
 2b. **슬라이드·개념 검색 (`PictureSearch`)**
    - `lib/pictureSearch.ts`: 정적 `SourceSpan`의 `slideLabel`/`concept` 부분 문자열 검색(비전·임베딩 없음).
    - `components/canvas/PictureSearch.tsx`: 공부 캔버스 상단 UI. 선택 시 기존 `resolveCitationSelected` → `CitationSelected` seek.
-   - ARCHITECTURE 스키마 확장 없음. Editor/Roommate·이미지 검색은 PRODUCT §7 나중 모드.
+   - ARCHITECTURE 스키마 확장 없음. 슬라이드 이미지·비전 임베딩 검색은 PRODUCT §7 나중.
+2c. **Editor / Roommate (PRODUCT §7, 같은 캔버스)**
+   - `lib/laterMode.ts`: 글·코드 첨삭(`coachEditorDraft`)·다른 분야 잇기(`linkRoommateTopic`) → 기존 `TutorTurn`.
+   - `components/tutor/LaterModePane.tsx`: Tutor pane 모드 탭. 플레이어와 대화를 갈라내지 않음.
+   - Roommate가 강의 개념에 안 닿으면 `scope=out_of_scope`, citations 빈칸. 스키마 패치 없음.
 3. **TutorTurn UI (1질문 + 인용)**
    - `TutorTurnView`: `question` 하나 + `citations` 버튼. 정답/풀이 필드 없음.
    - `scope=out_of_scope`이면 citations 숨김·범위 밖 안내만.
@@ -74,7 +78,7 @@ frontend/
     ├── components/    # UI 컴포넌트
     │   ├── canvas/    # 적응형 2분할 캔버스·PictureSearch·분할 핸들러
     │   ├── player/    # YouTube IFrame 플레이어 래퍼 (타임스탬프 딥링크)
-    │   ├── tutor/     # 소크라테스 튜터 대화창 및 접힌 속생각(Thinking Traces)
+    │   ├── tutor/     # 소크라테스 튜터 대화창 · LaterModePane(Editor/Roommate)
     │   ├── path/      # 학습 경로(planned/skipped/current/detour)
     │   ├── onboarding/# 아는 개념 체크 → 경로 축소
     │   └── math/      # KaTeX 수식 입력기 및 클라이언트 수식 판정기
@@ -92,6 +96,7 @@ frontend/
     │   ├── onDeviceTutor.ts # 로컬 TutorTurn 생성(엔진 injectable)
     │   ├── webLlmEngine.ts # @mlc-ai/web-llm 동적 로드
     │   ├── pictureSearch.ts # 정적 slideLabel/concept 검색
+    │   ├── laterMode.ts # Editor/Roommate → TutorTurn (out_of_scope 포함)
     │   └── storage.ts # localStorage 진도·오답·reviewCards (키 unitutor:learner:{courseId})
     ├── workers/       # webllm.worker.ts (WebWorkerMLCEngineHandler)
     ├── hooks/         # useLayoutMode, useTutorTurn(SSE|on-device) 등
