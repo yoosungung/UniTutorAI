@@ -4,7 +4,7 @@
 - **Pages (SPA):** `https://unitutor.askwho.net`
 - **Worker (API):** `https://api.tutor.askwho.net`
 
-Workers(`backend/`) + Pages(`frontend/dist/`). D1/R2/KV는 아직 제품 경로에 묶지 않는다 — 바인딩을 추가할 때 이 문서를 함께 갱신한다.
+Workers(`backend/`) + Pages(`frontend/dist/`). D1 `unitutor` (`DB`)는 LTI option B용. R2/KV는 아직 제품 경로에 묶지 않는다.
 
 Wiki: apply → deploy 순서 — `Cloudflare-D1-Migrations-Before-Worker-Deploy` (D1을 쓸 때만).  
 참고(존/커스텀 도메인 패턴): factory `deploy/SETUP.md` · Cloudflare Custom Domains.
@@ -21,7 +21,7 @@ Wiki: apply → deploy 순서 — `Cloudflare-D1-Migrations-Before-Worker-Deploy
 
 | 이름 | 어디에 | 용도 |
 |------|--------|------|
-| `CLOUDFLARE_API_TOKEN` | GitHub Actions Secrets · 로컬 env | Workers 편집 (+ 나중에 D1 Edit) |
+| `CLOUDFLARE_API_TOKEN` | GitHub Actions Secrets · 로컬 env | Workers 편집 + D1 Edit |
 | `CLOUDFLARE_ACCOUNT_ID` | GitHub Actions Secrets · 로컬 env | 계정 ID |
 | `GEMINI_API_KEY` | `wrangler secret put` (Worker) · `.dev.vars`(로컬) | 튜터 추론 (아직 라우트 최소) |
 | `VITE_API_BASE_URL` | Pages 빌드 env / `.env` / CI | FE → Worker origin (끝 `/` 없이). 프로덕션: `https://api.tutor.askwho.net` |
@@ -46,11 +46,11 @@ Workers `deploy` / `deploy:dry-run`은 `--config ./wrangler.jsonc`로 상위 mon
 
 ```bash
 cd backend
-# (D1 바인딩이 생기면 먼저) npx wrangler d1 migrations apply <BINDING> --remote
+# npm run deploy = d1 migrations apply DB --remote && wrangler deploy
 npm run deploy
 ```
 
-현재 `wrangler.jsonc`에 D1이 없으므로 apply 단계는 **N/A**. D1을 추가하면 `npm run deploy`가 **apply 성공 후** `wrangler deploy`만 호출하도록 스크립트를 바꾸고, CI에도 같은 순서를 넣는다.
+`backend/wrangler.jsonc`의 `database_id`는 실제 D1 UUID여야 한다(placeholder 금지). 신규 계정: `npx wrangler d1 create unitutor` 후 id를 커밋.
 
 `backend/wrangler.jsonc`의 `routes` (`api.tutor.askwho.net`, `custom_domain: true`)는 배포 시 Worker Custom Domain을 재확인한다.
 
@@ -113,7 +113,7 @@ DNS list **403**이면 CI는 zone CNAME ensure를 **soft-skip**하고 Smoke로 �
 - `on:` `push` `main` + `workflow_dispatch`
 - Secrets: `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID` (repo Actions secrets)
 - 순서: Worker `npm run deploy` → Ensure Pages project (`unitutor`) → Pages `deploy:pages` → Ensure Pages custom domain (`unitutor.askwho.net`) → Ensure Pages domain DNS CNAME → Smoke
-- D1 `migrations apply`: **N/A** (바인딩 없음; 생기면 apply → deploy로 확장)
+- D1: `npm run deploy`(backend)가 `migrations apply DB --remote` 후 Worker deploy
 - Smoke: `https://api.tutor.askwho.net/health` + `https://unitutor.askwho.net/`
 
 ```bash

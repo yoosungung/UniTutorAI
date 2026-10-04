@@ -72,7 +72,6 @@ npm test
 # 배포 설정·번들 dry-run (업로드 없음)
 npm run deploy:dry-run
 
-# Cloudflare Workers 배포
-# D1 바인딩이 생기면 apply --remote 성공 후에만 deploy (deploy/SETUP.md · wiki D1-before-deploy)
+# Cloudflare Workers 배포 (d1 migrations apply DB --remote → wrangler deploy)
 npm run deploy
 ```

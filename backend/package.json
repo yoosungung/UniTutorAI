@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "wrangler dev --config ./wrangler.jsonc",
-    "deploy": "wrangler deploy --config ./wrangler.jsonc --minify",
+    "deploy": "wrangler d1 migrations apply DB --remote --config ./wrangler.jsonc && wrangler deploy --config ./wrangler.jsonc --minify",
     "deploy:dry-run": "wrangler deploy --config ./wrangler.jsonc --dry-run --minify",
     "test": "vitest run",
     "typecheck": "tsc --noEmit"
