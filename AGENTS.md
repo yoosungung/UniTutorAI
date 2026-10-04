@@ -38,5 +38,5 @@ This file provides guidance to AI coding assistants (Claude Code, Codex, Gemini,
  
 ## 3. Status
 
-backend · frontend 스켈레톤, 적응형 2분할 캔버스(YouTube iframe), CS50P L0 정적 `SourceSpan`·`knowledgeDag` 픽스처, 온보딩 경로 축소(`planned`/`skipped`/`current`)·`DetourInserted`, Workers `POST /api/tutor/turn` SSE(`TutorTurn`) + Gemini 라우팅(+ BYOK `X-UniTutor-Byok-Key` one-shot), 온디바이스 WebLLM opt-in(`on_device_unsupported` fallback), `CitationSelected`→`startSec` seek, local-first 진도·오답, 로컬 FSRS `SessionClosed`→`ReviewCard`, 클라이언트 Math.js `formulaVerdict`, Web Push/SW `CardFaded` 알림(일 3회), 무료 문답 일 5회·광고 보상(+3 스텁)·유료 스텁 CTA·브라우저 BYOK가 있다.
+backend · frontend 스켈레톤, 적응형 2분할 캔버스(YouTube iframe), CS50P L0 정적 `SourceSpan`·`knowledgeDag` 픽스처, 온보딩 경로 축소(`planned`/`skipped`/`current`)·`DetourInserted`, Workers `POST /api/tutor/turn` SSE(`TutorTurn`) + Gemini 라우팅(+ BYOK `X-UniTutor-Byok-Key` one-shot), 온디바이스 WebLLM opt-in(`on_device_unsupported` fallback), `CitationSelected`→`startSec` seek, 정적 `slideLabel`/`concept` `PictureSearch`, local-first 진도·오답, 로컬 FSRS `SessionClosed`→`ReviewCard`, 클라이언트 Math.js `formulaVerdict`, Web Push/SW `CardFaded` 알림(일 3회), 무료 문답 일 5회·광고 보상(+3 스텁)·유료 스텁 CTA·브라우저 BYOK가 있다.
 
