@@ -7,8 +7,10 @@ import { FormulaInput } from './components/math/FormulaInput';
 import { QuotaGate } from './components/tutor/QuotaGate';
 import { ByokPanel } from './components/tutor/ByokPanel';
 import { OnDevicePanel } from './components/tutor/OnDevicePanel';
+import { LaterModePane } from './components/tutor/LaterModePane';
 import { TutorPane } from './components/tutor/TutorPane';
 import { TutorTurnView } from './components/tutor/TutorTurnView';
+import type { LaterMode } from './lib/laterMode';
 import {
   CS50P_LECTURE_0,
   CS50P_LECTURE_0_DAG,
@@ -117,6 +119,8 @@ export default function App() {
   const [onDeviceEpoch, setOnDeviceEpoch] = useState(0);
   const [ltiLearnerId, setLtiLearnerId] = useState<string | null>(null);
   const [ltiCourseId, setLtiCourseId] = useState<string | null>(null);
+  const [laterTurn, setLaterTurn] = useState<TutorTurn | null>(null);
+  const [laterMode, setLaterMode] = useState<LaterMode>('tutor');
 
   useEffect(() => {
     const launch = consumeLtiLaunchFromLocation();
@@ -213,9 +217,10 @@ export default function App() {
 
   useEffect(() => {
     setFormulaTurn(null);
+    setLaterTurn(null);
   }, [questionSpanId]);
 
-  const turn = formulaTurn ?? baseTurn;
+  const turn = laterTurn ?? formulaTurn ?? baseTurn;
 
   useEffect(() => {
     if (!turn) {
@@ -432,7 +437,7 @@ export default function App() {
             <TutorPane
               layoutLabel={layoutLabel}
               footer={
-                tutorAllowed && baseTurn ? (
+                laterMode === 'tutor' && tutorAllowed && baseTurn ? (
                   <FormulaInput
                     expectedExpr={DEMO_EXPECTED_EXPR}
                     onChecked={(_verdict, learnerExpr) => {
@@ -448,50 +453,61 @@ export default function App() {
                 ) : undefined
               }
             >
-              {!tutorAllowed ? (
-                <QuotaGate
-                  onUnlockPaid={() => {
-                    setEntitlement(setPaidUnlock());
-                  }}
-                  onWatchAdReward={() => {
-                    grantAdReward(new Date());
-                    // Re-run consume against the same turn id after bonus grant.
-                    if (turn) {
-                      const result = tryConsumeTutorTurn(
-                        turn.id,
-                        new Date(),
-                        entitlement,
-                        5,
-                        { byokActive, onDeviceActive },
-                      );
-                      setTutorAllowed(result.allowed);
-                    }
-                  }}
-                />
-              ) : tutorLoading && !turn ? (
-                <p aria-busy="true">튜터 질문을 불러오는 중…</p>
-              ) : !turn && tutorStreamError ? (
-                <p role="status" style={{ fontSize: 13 }}>
-                  온디바이스/스트림 안내: {tutorStreamError}
-                </p>
-              ) : turn ? (
-                <>
-                  {tutorStreamError && (
-                    <p role="status" style={{ fontSize: 12, opacity: 0.75 }}>
-                      스트림 안내: {tutorStreamError}
+              <LaterModePane
+                sourceSpanId={
+                  questionSpanId ?? CS50P_LECTURE_0_SPANS[0]?.id ?? ''
+                }
+                spans={CS50P_LECTURE_0_SPANS}
+                onTurn={setLaterTurn}
+                onModeChange={setLaterMode}
+                tutor={
+                  !tutorAllowed ? (
+                    <QuotaGate
+                      onUnlockPaid={() => {
+                        setEntitlement(setPaidUnlock());
+                      }}
+                      onWatchAdReward={() => {
+                        grantAdReward(new Date());
+                        if (turn) {
+                          const result = tryConsumeTutorTurn(
+                            turn.id,
+                            new Date(),
+                            entitlement,
+                            5,
+                            { byokActive, onDeviceActive },
+                          );
+                          setTutorAllowed(result.allowed);
+                        }
+                      }}
+                    />
+                  ) : tutorLoading && !turn ? (
+                    <p aria-busy="true">튜터 질문을 불러오는 중…</p>
+                  ) : !turn && tutorStreamError ? (
+                    <p role="status" style={{ fontSize: 13 }}>
+                      온디바이스/스트림 안내: {tutorStreamError}
                     </p>
-                  )}
-                  <TutorTurnView
-                    turn={turn}
-                    spans={CS50P_LECTURE_0_SPANS}
-                    onCitationSelected={(e: CitationSelected) =>
-                      setSeekSec(e.startSec)
-                    }
-                  />
-                </>
-              ) : tutorStreamError ? (
-                <p role="alert">튜터를 불러오지 못했습니다: {tutorStreamError}</p>
-              ) : null}
+                  ) : turn ? (
+                    <>
+                      {tutorStreamError && (
+                        <p role="status" style={{ fontSize: 12, opacity: 0.75 }}>
+                          스트림 안내: {tutorStreamError}
+                        </p>
+                      )}
+                      <TutorTurnView
+                        turn={turn}
+                        spans={CS50P_LECTURE_0_SPANS}
+                        onCitationSelected={(e: CitationSelected) =>
+                          setSeekSec(e.startSec)
+                        }
+                      />
+                    </>
+                  ) : tutorStreamError ? (
+                    <p role="alert">
+                      튜터를 불러오지 못했습니다: {tutorStreamError}
+                    </p>
+                  ) : null
+                }
+              />
             </TutorPane>
           }
         />
