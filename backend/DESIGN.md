@@ -21,7 +21,7 @@ UniTutor의 백엔드 컴포넌트 내부 설계다. 컴포넌트 간 계약과 
 4. **LTI 1.3 입장 (옵션 B)**
    - `GET /lti/oidc/login` · `POST /lti/launch` — 계약 [ARCHITECTURE.md](../ARCHITECTURE.md) §2.7–2.8.
    - `services/ltiStore.ts`: 배포 레지스트리·`resource_link`→`CourseRef` 시드·`LtiLearner` upsert. 테스트는 `MemoryLtiStore`, 배포는 D1(`DB`).
-   - JWT 검증은 `verifyIdToken` 주입 가능(스파이크는 mock Platform; 실 JWKS는 후속).
+   - JWT 기본 경로: `services/ltiJwt.ts` `verifyIdTokenWithJwks` — deployment `jwks_url`을 `fetch`한 뒤 서명·`exp`/`iat`(±60s) 검증. unsigned/`alg=none` 거부(fail-closed). 단위 테스트만 `verifyIdToken` 주입.
    - PII: `sub`만 저장. 이름/이메일은 저장하지 않음.
 
 ## 3. 내부 디렉터리 구조
@@ -44,6 +44,7 @@ backend/
     ├── services/      # 외부 LLM Provider 및 비즈니스 로직
     │   ├── llm.ts     # Gemini/DeepSeek API 호출 및 프롬프트 캐싱 제어
     │   ├── ltiStore.ts
+    │   ├── ltiJwt.ts  # Platform JWKS id_token 검증
     │   └── cache.ts   # 응답 및 메타데이터 캐시 관리
     └── types/         # Worker 내부 타입 정의
 ```

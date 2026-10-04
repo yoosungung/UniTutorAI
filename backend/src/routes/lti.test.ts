@@ -1,4 +1,5 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { SignJWT, exportJWK, generateKeyPair } from 'jose';
 import { createApp } from '../index';
 import {
   MemoryLtiStore,
@@ -14,6 +15,14 @@ const DEPLOY = {
   frontendOrigin: 'https://app.example.test',
 };
 
+const DEPLOYMENT_CLAIM =
+  'https://purl.imsglobal.org/spec/lti/claim/deployment_id';
+const MESSAGE_TYPE_CLAIM =
+  'https://purl.imsglobal.org/spec/lti/claim/message_type';
+const VERSION_CLAIM = 'https://purl.imsglobal.org/spec/lti/claim/version';
+const RESOURCE_LINK_CLAIM =
+  'https://purl.imsglobal.org/spec/lti/claim/resource_link';
+
 function seedStore(): MemoryLtiStore {
   const store = new MemoryLtiStore();
   store.seedDeployment(DEPLOY);
@@ -22,7 +31,7 @@ function seedStore(): MemoryLtiStore {
     clientId: DEPLOY.clientId,
     deploymentId: DEPLOY.deploymentId,
     resourceLinkId: 'res-cs50p',
-    courseId: 'cs50p-l0',
+    courseId: 'cs50p-2022-lecture-0',
   });
   return store;
 }
@@ -106,7 +115,7 @@ describe('POST /lti/launch', () => {
     expect(res.status).toBe(302);
     const loc = new URL(res.headers.get('Location')!);
     expect(loc.origin).toBe(DEPLOY.frontendOrigin);
-    expect(loc.searchParams.get('courseId')).toBe('cs50p-l0');
+    expect(loc.searchParams.get('courseId')).toBe('cs50p-2022-lecture-0');
     const learnerId = loc.searchParams.get('ltiLearnerId');
     expect(learnerId).toBeTruthy();
 
@@ -117,6 +126,97 @@ describe('POST /lti/launch', () => {
       deploymentId: DEPLOY.deploymentId,
       subject: 'learner-42',
     });
+  });
+
+  it('default JWKS path accepts signed id_token and rejects unsigned', async () => {
+    const store = seedStore();
+    const { publicKey, privateKey } = await generateKeyPair('RS256', {
+      extractable: true,
+    });
+    const jwk = await exportJWK(publicKey);
+    jwk.kid = 'platform-1';
+    jwk.alg = 'RS256';
+    jwk.use = 'sig';
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () =>
+        new Response(JSON.stringify({ keys: [jwk] }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        }),
+      ),
+    );
+
+    const claims = validClaims();
+    const signed = await new SignJWT({
+      iss: claims.iss,
+      aud: claims.aud,
+      sub: claims.sub,
+      nonce: claims.nonce,
+      [DEPLOYMENT_CLAIM]: claims.deploymentId,
+      [MESSAGE_TYPE_CLAIM]: claims.messageType,
+      [VERSION_CLAIM]: claims.version,
+      [RESOURCE_LINK_CLAIM]: { id: claims.resourceLinkId },
+    })
+      .setProtectedHeader({ alg: 'RS256', kid: 'platform-1', typ: 'JWT' })
+      .setIssuedAt()
+      .setExpirationTime('5m')
+      .sign(privateKey);
+
+    const app = createApp({ ltiStore: store });
+    const state = store.putLoginStateSync({
+      nonce: claims.nonce,
+      iss: DEPLOY.iss,
+      clientId: DEPLOY.clientId,
+      deploymentId: DEPLOY.deploymentId,
+    });
+
+    const ok = await app.request('/lti/launch', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ id_token: signed, state }).toString(),
+    });
+    expect(ok.status).toBe(302);
+    expect(new URL(ok.headers.get('Location')!).searchParams.get('courseId')).toBe(
+      'cs50p-2022-lecture-0',
+    );
+
+    const state2 = store.putLoginStateSync({
+      nonce: 'nonce-2',
+      iss: DEPLOY.iss,
+      clientId: DEPLOY.clientId,
+      deploymentId: DEPLOY.deploymentId,
+    });
+    const header = Buffer.from(
+      JSON.stringify({ alg: 'none', typ: 'JWT' }),
+    ).toString('base64url');
+    const payload = Buffer.from(
+      JSON.stringify({
+        iss: claims.iss,
+        aud: claims.aud,
+        sub: 'forged',
+        nonce: 'nonce-2',
+        [DEPLOYMENT_CLAIM]: claims.deploymentId,
+        [MESSAGE_TYPE_CLAIM]: claims.messageType,
+        [VERSION_CLAIM]: claims.version,
+        [RESOURCE_LINK_CLAIM]: { id: claims.resourceLinkId },
+      }),
+    ).toString('base64url');
+    const forged = await app.request('/lti/launch', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        id_token: `${header}.${payload}.`,
+        state: state2,
+      }).toString(),
+    });
+    expect(forged.status).toBe(401);
+    await expect(forged.json()).resolves.toMatchObject({ error: 'invalid_token' });
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
   });
 
   it('rejects wrong audience with 401', async () => {
