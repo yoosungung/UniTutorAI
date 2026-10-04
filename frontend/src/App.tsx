@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { PictureSearch } from './components/canvas/PictureSearch';
 import { StudyCanvas } from './components/canvas/StudyCanvas';
 import { OnboardingInterview } from './components/onboarding/OnboardingInterview';
 import { PathView } from './components/path/PathView';
@@ -317,6 +318,10 @@ export default function App() {
           padding: '0 12px',
         }}
       >
+        <PictureSearch
+          spans={CS50P_LECTURE_0_SPANS}
+          onCitationSelected={(e: CitationSelected) => setSeekSec(e.startSec)}
+        />
         <PathView path={path} spans={CS50P_LECTURE_0_SPANS} />
         <div style={{ display: 'flex', gap: 8, paddingBottom: 8 }}>
           {active?.placement === 'current' && (
