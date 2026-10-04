@@ -29,10 +29,11 @@
 
 - 온디바이스 로컬 모델(WebLLM / On-Device SLM) 구동으로 클라우드 추론비 완전 제거.
 - 슬라이드 시각 자체를 짚는 검색, 글·코드 첨삭, 다른 분야와 잇는 대화.
-- 대학 학습관리시스템(LMS/LTI) B2B 연동. 1단계 루프가 돌기 전에는 손대지 않는다.
+- 대학 학습관리시스템(LMS/LTI) B2B 연동. 초안: [docs/proposals/lti-b2b.md](docs/proposals/lti-b2b.md) (Eric 승인 전 계약 아님).
 
 ## 2. 미결정
 
+- LMS/LTI MVP 범위(옵션 A launch-only local namespace / B 서버 learner / C AGS) — `@eric` 승인 대기 (`<!-- lti:pending-eric -->`).
 - ~~첫 과목 확정~~ → CS50P Lecture 0 (`<!-- course:approved -->`).
 - ~~무료 문답의 하루 기본 제공 횟수~~ → **5**/일 (`<!-- free-tutor-turns:5 -->`).
 - ~~광고 1회당 문답 충전 횟수~~ → **3** (`<!-- ad-reward-tutor-turns:3 -->`). 광고 SDK는 FE 스텁(벤더 연동 후속).
