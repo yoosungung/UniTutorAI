@@ -18,6 +18,11 @@ UniTutor의 백엔드 컴포넌트 내부 설계다. 컴포넌트 간 계약과 
    - 사전 가공된 강좌 정의, VTT 자막 매핑, 정적 지식 DAG JSON을 Cloudflare R2 또는 Worker Assets를 통해 서빙한다.
 3. **선택적 동기화 API**
    - 학습자의 로컬 진도 및 FSRS 복습 카드를 클라우드에 백업하고자 할 때 최소한의 동기화 엔드포인트를 제공한다 (Cloudflare D1 SQLite 기반).
+4. **LTI 1.3 입장 (옵션 B)**
+   - `GET /lti/oidc/login` · `POST /lti/launch` — 계약 [ARCHITECTURE.md](../ARCHITECTURE.md) §2.7–2.8.
+   - `services/ltiStore.ts`: 배포 레지스트리·`resource_link`→`CourseRef` 시드·`LtiLearner` upsert. 테스트는 `MemoryLtiStore`, 배포는 D1(`DB`).
+   - JWT 검증은 `verifyIdToken` 주입 가능(스파이크는 mock Platform; 실 JWKS는 후속).
+   - PII: `sub`만 저장. 이름/이메일은 저장하지 않음.
 
 ## 3. 내부 디렉터리 구조
 
@@ -28,14 +33,17 @@ backend/
 ├── wrangler.jsonc     # Cloudflare Workers 설정
 ├── package.json       # 의존성 및 스크립트
 ├── tsconfig.json      # TypeScript 설정
+├── migrations/        # D1 스키마
 └── src/
     ├── index.ts       # Worker 진입점 (Hono 앱 생성 및 라우터 마운트)
     ├── routes/        # HTTP 및 SSE 엔드포인트
     │   ├── tutor.ts   # 소크라테스 튜터 추론 스트리밍
+    │   ├── lti.ts     # LTI 1.3 OIDC login + launch
     │   ├── courses.ts # 정적 강좌 메타 및 DAG 서빙
     │   └── sync.ts    # 학습 상태 백업/동기화 (선택)
     ├── services/      # 외부 LLM Provider 및 비즈니스 로직
     │   ├── llm.ts     # Gemini/DeepSeek API 호출 및 프롬프트 캐싱 제어
+    │   ├── ltiStore.ts
     │   └── cache.ts   # 응답 및 메타데이터 캐시 관리
     └── types/         # Worker 내부 타입 정의
 ```
@@ -44,6 +52,8 @@ backend/
 
 - `GEMINI_API_KEY`: 앱 소유 튜터 추론용 API 키(BYOK 미사용 시).
 - BYOK: 요청 헤더 `X-UniTutor-Byok-Key`로만 수신(브라우저 custody). 바인딩/시크릿으로 저장하지 않음.
+- `FRONTEND_ORIGIN`: LTI launch 성공 시 리다이렉트 origin (예: `https://unitutor.askwho.net`).
+- `DB`: D1 — `lti_deployments` / `lti_resource_courses` / `lti_learners` / `lti_login_states`.
 - `COURSE_STORAGE`: 강좌 정적 자산용 R2 버킷 바인딩 (선택).
 - `CACHE_KV`: 빈출 질의 시맨틱 캐시용 Workers KV 네임스페이스.
 

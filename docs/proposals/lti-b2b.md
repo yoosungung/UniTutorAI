@@ -1,10 +1,10 @@
 # Proposal: 대학 LMS / LTI B2B 연동 (초안)
 
-**상태:** Eric 승인 대기 · 계약 미반영  
+**상태:** Eric 승인 — **옵션 B** (2026-10-04) · 계약은 [ARCHITECTURE.md](../../ARCHITECTURE.md) §1·§2.7–2.8 반영  
 **티켓:** `4aa8d43d-4ad6-42b0-bd1c-a0d83caaf061`  
-**wiki:** LTI/LMS 항목 miss → 외부 스펙 요약(아래 sources). canonical 승격은 `@km` 판단.
+**wiki:** `inbox/uni-tutor/2026-10-04-lti-b2b-proposal.md`
 
-이 문서는 [ARCHITECTURE.md](../../ARCHITECTURE.md) / [backend/DESIGN.md](../../backend/DESIGN.md)에 넣기 **전** 초안이다. 공개 API·테넌트 데이터·식별자 매핑은 승인 후에만 계약으로 올린다.
+옵션 A/C는 채택하지 않음. AGS/Deep Linking은 계속 Non-goal.
 
 ## 1. Goal / Non-goals
 
