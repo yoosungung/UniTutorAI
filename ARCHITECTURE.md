@@ -13,6 +13,9 @@
 - 수식 판정이 있으면 문장보다 먼저 온다. 판정과 어긋나는 풀이는 실리지 않는다.
 - `ReviewCard`는 세션이 닫힐 때 한 장 생긴다.
 - 우회는 경로에 `SourceSpan`을 끼워 넣는다. 그 구간이 끝나면 원래 장면의 질문으로 돌아온다.
+- LTI 런치는 **세션 입장**(identity + `CourseRef` 바인딩)만 담당한다. `TutorTurn`·`SourceSpan` 계약을 바꾸지 않는다.
+- LTI 학습자는 D1에 `(iss, client_id, deployment_id, sub)`로 링크한다(옵션 B). 이메일 등 PII claim은 필수 저장하지 않는다.
+- AGS·NRPS·Deep Linking·LTI 1.1은 이 계약 밖이다.
 
 ## 2. 형태
 
@@ -108,3 +111,31 @@ SSE 이벤트 이름:
 앱 `GEMINI_API_KEY`와 BYOK 헤더가 **둘 다** 없으면 SSE를 열지 않고 **503** `{ "error": "llm_unavailable" }`(키 미노출). MVP Provider는 Gemini만; 프롬프트 캐싱·DeepSeek cascade는 후속.
 
 **클라이언트 라우팅 우선순위(학습자 opt-in):** 온디바이스 WebLLM이 켜져 있으면 Workers SSE를 호출하지 않는다. WebGPU 불가·로드 실패 시 명시적 `on_device_unsupported` / `on_device_failed`만 노출하고 클라우드로 조용히 넘기지 않는다. 오프이면 기존 BYOK 헤더 → 앱 `GEMINI_API_KEY` 경로를 쓴다.
+
+### 2.7 LTI 1.3 입장 HTTP
+
+| 메서드 | 경로 | 결과 |
+|--------|------|------|
+| `GET` | `/lti/oidc/login` | Platform 3rd-party login 개시 → Platform auth URL로 302 |
+| `POST` | `/lti/launch` | form `id_token`(+`state`) 검증 → FE 공부 캔버스 302 |
+
+쿼리/폼 최소값과 JWT claim 매핑:
+
+| 입력 | 의미 |
+|------|------|
+| `iss`, `client_id`, `login_hint`, `target_link_uri`, `lti_message_hint`, `lti_deployment_id` | OIDC login 개시(Platform→Tool) |
+| `id_token` JWT `sub` | LMS 사용자(불투명) |
+| `iss` + `aud`(=client_id) + `deployment_id` claim | `LtiDeployment` 키 |
+| `resource_link.id` claim | 시드된 `CourseRef.id`로 매핑 |
+
+성공 리다이렉트(최소): `{FRONTEND_ORIGIN}/?courseId={CourseRef.id}&ltiLearnerId={LtiLearner.id}`.
+
+### 2.8 `LtiLearner`
+
+| 필드 | 의미 |
+|------|------|
+| `id` | UniTutor 쪽 학습자 링크 id |
+| `iss` | Platform issuer |
+| `clientId` | Tool client_id (`aud`) |
+| `deploymentId` | Platform deployment_id |
+| `subject` | JWT `sub` |

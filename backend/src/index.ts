@@ -1,10 +1,11 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { createTutorRoutes, type TutorRouteOptions } from './routes/tutor';
+import { createLtiRoutes, type LtiRouteOptions } from './routes/lti';
 import type { Bindings } from './types/bindings';
 
 export type { Bindings };
-export type CreateAppOptions = TutorRouteOptions;
+export type CreateAppOptions = TutorRouteOptions & LtiRouteOptions;
 
 export function createApp(options: CreateAppOptions = {}) {
   const app = new Hono<{ Bindings: Bindings }>();
@@ -29,6 +30,7 @@ export function createApp(options: CreateAppOptions = {}) {
   });
 
   app.route('/api/tutor', createTutorRoutes(options));
+  app.route('/lti', createLtiRoutes(options));
 
   return app;
 }
