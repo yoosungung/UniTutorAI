@@ -45,9 +45,10 @@ UniTutor의 프론트엔드 컴포넌트 내부 설계다. 컴포넌트 간 계�
    - `hooks/useTutorTurn.ts` + `lib/tutorStream.ts`: Workers SSE(`tutor_turn_delta`/`tutor_turn`)를 수신해 `TutorTurnView`에 반영.
    - 네트워크·503 실패 시 짧은 오류 문구; 로컬 템플릿 폴백은 개발용만(`import.meta.env.DEV`).
    - 3단계 에스컬레이션(힌트 반복 시 직전 단서 설명 요구)의 1차 감지 및 템플릿 처리.
-6. **웹 푸시 및 PWA (`CardFaded`)**
+6. **웹 푸시 및 PWA (`CardFaded` + installable shell)**
    - `public/sw.js` + `lib/reviewNotify.ts`: 알림 권한 `granted`일 때 `ReviewCard.fadesAt` 도달 카드를 `CardFaded`로 처리하고 서비스 워커 `showNotification`으로 개념 이름 알림(PRODUCT 문구).
    - 하루 상한 **3**(ROADMAP 확정). 레저는 `localStorage` 키 `unitutor:review-notify`(UTC day·count·notifiedCardIds). 서버 Push subscription API 없음(FE local).
+   - **Installable shell:** `public/manifest.webmanifest`(`name`/`short_name`/`start_url`/`display:standalone`/icons) + `public/icons/*` + `index.html` `rel=manifest`. 오프라인 강의·튜터 캐시는 없음(SW는 notify-only).
 7. **무료 문답 한도 · 광고 보상 · 유료 스텁 · BYOK (`TutorTurn`)**
    - `lib/tutorQuota.ts`: 무료 하루 **5**회(ROADMAP). 레저 `unitutor:tutor-quota`(UTC day·count·consumedTurnIds·bonusTurns). 동일 `turn.id`는 당일 재과금 없음.
    - 광고 스텁 `grantAdReward`: 1회당 **+3** (`AD_REWARD_TUTOR_TURNS`). 광고 SDK/벤더 없음 — 계약·보안 전 `@eric.yoo`.
@@ -71,7 +72,11 @@ frontend/
 ├── vite.config.ts     # Vite 빌드 설정
 ├── package.json       # 의존성 및 스크립트
 ├── tsconfig.json      # TypeScript 설정
-├── index.html         # SPA 진입 HTML
+├── index.html         # SPA 진입 HTML (rel=manifest)
+├── public/
+│   ├── sw.js          # CardFaded notify-only SW
+│   ├── manifest.webmanifest
+│   └── icons/         # 192/512 + apple-touch
 └── src/
     ├── main.tsx       # React 앱 마운트 진입점
     ├── App.tsx        # 최상위 라우터 및 글로벌 레이아웃
@@ -108,7 +113,7 @@ frontend/
 `components/tutor/QuotaGate.tsx`는 한도 초과 시 광고 충전(+3)·유료 unlock CTA(테스트 스텁).
 `components/tutor/OnDevicePanel.tsx`는 WebLLM opt-in 토글.
 
-Vite `public/sw.js`는 빌드 시 사이트 루트로 복사된다.
+Vite `public/sw.js`·`manifest.webmanifest`·`icons/`는 빌드 시 사이트 루트로 복사된다.
 ## 환경 변수 (Vite / Pages)
 
 - `VITE_API_BASE_URL`: Worker origin (끝 `/` 없이). `lib/apiBase.ts`의 `getApiBaseUrl` / `apiUrl`이 사용. 비우면 same-origin 상대 경로. 예시는 `.env.example`, 배포는 [deploy/SETUP.md](../deploy/SETUP.md).

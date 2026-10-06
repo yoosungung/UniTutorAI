@@ -6,7 +6,7 @@ UniTutor의 제품 경험 정본이다. 화면이 지켜야 하는 동작은 [AR
 
 대학 공개 강의를 혼자 틀어 놓는 서비스가 아니라, 지금 내 수준에서 이어지는 짧은 수업이다. 한 화면에서 강의를 보고, 답을 받기 전에 질문을 받고, 막히면 앞 개념으로 잠깐 돌아갔다가, 끝날 때 카드 한 장을 남긴다.
 
-UI는 웹(Web)으로 단일화하며, iOS(Safari), Android(Chrome), Windows(Edge/Chrome), macOS(Safari/Chrome)의 기본 브라우저 환경을 모두 지원하는 적응형 웹(Adaptive/Responsive Web)을 기준으로 한다.
+UI는 웹(Web)으로 단일화하며, iOS(Safari), Android(Chrome), Windows(Edge/Chrome), macOS(Safari/Chrome)의 기본 브라우저 환경을 모두 지원하는 적응형 웹(Adaptive/Responsive Web)을 기준으로 한다. 같은 단일 웹 앱을 **설치 가능한 PWA**로 정의한다: `webmanifest`·아이콘·`display`로 Chromium 설치 기준을 충족하고, 기존 서비스 워커는 `CardFaded` 로컬 알림용이다. 강의·튜터 **오프라인 캐시 / offline-first 셸**과 서버 Web Push subscription API·네이티브 스토어 앱은 제품 범위 밖이다.
 
 화면에는 오늘 할 일, 이 장면, 한 가지 질문, 다시 볼 카드만 있다.
 
