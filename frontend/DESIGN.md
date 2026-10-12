@@ -35,6 +35,7 @@ UniTutor의 프론트엔드 컴포넌트 내부 설계다. 컴포넌트 간 계�
 3b. **지식 DAG · 경로 · detour (2단계)**
    - 정적 DAG JSON은 `content/fixtures/`(SourceSpan 옆). 런타임은 `lib/pathFromOnboarding`·`lib/detour`.
    - 온보딩 후 `PathView`에 `planned`/`skipped`/`current`/`detour` 표시.
+   - `PathChrome`: 캔버스 진입 기본 **접힘**(현재 개념 1줄 + 「경로」토글). 펼치면 PathView·과정 액션. 로컬 UI state만(스키마 없음). Detour active도 접힘 유지 + 우회 배지.
    - `DetourInserted` 시 `returnToSpanId` 채우고, 우회 종료 후 같은 캔버스에서 원래 질문 복귀.
 4. **클라이언트 사이드 연산 오프로딩 (Zero Server Cost)**
    - **수식 실시간 판정**: **Math.js** (`lib/mathCheck.ts`). Pyodide는 초기 WASM·로드 비용이 커서 이번 범위에서 채택하지 않음. `checkFormula(learner, expected)` → `correct`|`incorrect`; UI는 `formulaVerdict`를 튜터 문장보다 먼저 반영하고, incorrect여도 정답/풀이를 `TutorTurn`에 싣지 않는다.

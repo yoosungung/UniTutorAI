@@ -36,6 +36,7 @@ describe('BYOK smoke', () => {
 
     expect(screen.getByRole('region', { name: '무료 문답 한도' })).toBeInTheDocument();
 
+    await user.click(screen.getByRole('button', { name: '학습 경로' }));
     await user.type(
       screen.getByLabelText(/Gemini API 키/i),
       'AIza-smoke-byok-key',
@@ -54,6 +55,7 @@ describe('BYOK smoke', () => {
     const user = userEvent.setup();
     render(<App />);
     await user.click(screen.getByRole('button', { name: /경로 만들기/i }));
+    await user.click(screen.getByRole('button', { name: '학습 경로' }));
 
     await user.type(
       screen.getByLabelText(/Gemini API 키/i),

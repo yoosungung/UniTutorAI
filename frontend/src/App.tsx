@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { PictureSearch } from './components/canvas/PictureSearch';
 import { StudyCanvas } from './components/canvas/StudyCanvas';
 import { OnboardingInterview } from './components/onboarding/OnboardingInterview';
-import { PathView } from './components/path/PathView';
+import { PathChrome } from './components/path/PathChrome';
 import { FormulaInput } from './components/math/FormulaInput';
 import { QuotaGate } from './components/tutor/QuotaGate';
 import { ByokPanel } from './components/tutor/ByokPanel';
@@ -347,35 +347,19 @@ export default function App() {
       }}
     >
       {ltiLaunchNote}
-      <div
-        style={{
-          maxHeight: '28vh',
-          overflow: 'auto',
-          borderBottom: '1px solid var(--border-subtle, #1E293B)',
-          padding: '0 12px',
-        }}
+      <PathChrome
+        path={path}
+        spans={CS50P_LECTURE_0_SPANS}
+        active={active}
+        onStuck={onStuck}
+        onDetourDone={onDetourDone}
+        onCloseSession={onCloseSession}
       >
         <PictureSearch
           spans={CS50P_LECTURE_0_SPANS}
           onCitationSelected={(e: CitationSelected) => setSeekSec(e.startSec)}
         />
-        <PathView path={path} spans={CS50P_LECTURE_0_SPANS} />
         <div style={{ display: 'flex', gap: 8, paddingBottom: 8 }}>
-          {active?.placement === 'current' && (
-            <button type="button" onClick={onStuck}>
-              막힘 — 우회 삽입
-            </button>
-          )}
-          {active?.placement === 'detour' && (
-            <button type="button" onClick={onDetourDone}>
-              우회 끝 — 원래 질문으로
-            </button>
-          )}
-          {active?.placement === 'current' && (
-            <button type="button" onClick={onCloseSession}>
-              세션 종료 — ReviewCard
-            </button>
-          )}
           {notifyPermission !== 'granted' && (
             <button
               type="button"
@@ -388,10 +372,10 @@ export default function App() {
           )}
         </div>
         <OnDevicePanel
-          onChanged={(active) => {
-            setOnDeviceActive(active);
+          onChanged={(panelActive) => {
+            setOnDeviceActive(panelActive);
             setOnDeviceEpoch((n) => n + 1);
-            if (active && turn) {
+            if (panelActive && turn) {
               setTutorAllowed(true);
             } else if (turn) {
               const result = tryConsumeTutorTurn(
@@ -399,17 +383,17 @@ export default function App() {
                 new Date(),
                 entitlement,
                 5,
-                { byokActive, onDeviceActive: active },
+                { byokActive, onDeviceActive: panelActive },
               );
               setTutorAllowed(result.allowed);
             }
           }}
         />
         <ByokPanel
-          onChanged={(active) => {
-            setByokActive(active);
+          onChanged={(panelActive) => {
+            setByokActive(panelActive);
             setByokEpoch((n) => n + 1);
-            if (active && turn) {
+            if (panelActive && turn) {
               setTutorAllowed(true);
             } else if (turn) {
               const result = tryConsumeTutorTurn(
@@ -417,7 +401,7 @@ export default function App() {
                 new Date(),
                 entitlement,
                 5,
-                { byokActive: active, onDeviceActive },
+                { byokActive: panelActive, onDeviceActive },
               );
               setTutorAllowed(result.allowed);
             }
@@ -428,7 +412,7 @@ export default function App() {
             저장됨: {lastClosedSummary}
           </p>
         )}
-      </div>
+      </PathChrome>
       <div style={{ flex: 1, minHeight: 0 }}>
         <StudyCanvas
           course={CS50P_LECTURE_0}

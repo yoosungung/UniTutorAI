@@ -16,6 +16,7 @@ describe('App SessionClosed → ReviewCard smoke', () => {
     render(<App />);
 
     await user.click(screen.getByRole('button', { name: /경로 만들기/i }));
+    await user.click(screen.getByRole('button', { name: '학습 경로' }));
     await user.click(
       screen.getByRole('button', { name: /세션 종료 — ReviewCard/i }),
     );
