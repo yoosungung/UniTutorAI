@@ -22,16 +22,21 @@ describe('App local-first learner state', () => {
     await user.click(checkboxes[0]);
     await user.click(screen.getByRole('button', { name: /경로 만들기/i }));
 
-    expect(screen.getByLabelText('학습 경로')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: '학습 경로' }));
+    expect(screen.getByLabelText('학습 경로 목록')).toBeInTheDocument();
     expect(
-      screen.getByLabelText('학습 경로').querySelector('[data-placement="current"]'),
+      screen
+        .getByLabelText('학습 경로 목록')
+        .querySelector('[data-placement="current"]'),
     ).toBeTruthy();
 
     await user.click(
       screen.getByRole('button', { name: /막힘 — 우회 삽입/i }),
     );
     expect(
-      screen.getByLabelText('학습 경로').querySelector('[data-placement="detour"]'),
+      screen
+        .getByLabelText('학습 경로 목록')
+        .querySelector('[data-placement="detour"]'),
     ).toBeTruthy();
 
     const mid = loadLearnerState(CS50P_LECTURE_0.id);
@@ -41,10 +46,14 @@ describe('App local-first learner state', () => {
 
     unmount();
 
-    // Simulate reload: new mount hydrates from localStorage.
+    // Simulate reload: new mount hydrates from localStorage (chrome collapsed).
     render(<App />);
+    expect(screen.getByText('우회')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: '학습 경로' }));
     expect(
-      screen.getByLabelText('학습 경로').querySelector('[data-placement="detour"]'),
+      screen
+        .getByLabelText('학습 경로 목록')
+        .querySelector('[data-placement="detour"]'),
     ).toBeTruthy();
     expect(
       screen.getByRole('button', { name: /우회 끝 — 원래 질문으로/i }),

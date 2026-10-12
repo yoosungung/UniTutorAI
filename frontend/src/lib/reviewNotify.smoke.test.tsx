@@ -15,6 +15,7 @@ describe('CardFaded notify smoke', () => {
     const user = userEvent.setup();
     render(<App />);
     await user.click(screen.getByRole('button', { name: /경로 만들기/i }));
+    await user.click(screen.getByRole('button', { name: '학습 경로' }));
     expect(
       screen.getByRole('button', { name: '다시 보기 알림 켜기' }),
     ).toBeInTheDocument();

@@ -21,7 +21,7 @@ function conceptFor(id: string, spans: SourceSpan[]): string {
 export function PathView({ path, spans }: PathViewProps) {
   return (
     <ol
-      aria-label="학습 경로"
+      aria-label="학습 경로 목록"
       style={{
         listStyle: 'none',
         margin: 0,
